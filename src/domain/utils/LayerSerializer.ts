@@ -233,10 +233,17 @@ export function serializeLayers(layers: Layer<AnyPath>[]): string {
 }
 
 export function deserializeLayers(json: string): Layer<AnyPath>[] {
-  const serialized: SerializedLayer[] = JSON.parse(json);
-  return serialized.map((s) => {
-    const path = deserializePath(s.path);
-    const layer = createLayer(s.name, Color.fromHex(s.color), path);
-    return { ...layer, id: s.id, visible: s.visible };
+  const raw: unknown = JSON.parse(json);
+  if (!Array.isArray(raw)) throw new Error("Expected a JSON array");
+  return raw.map((s: unknown, i) => {
+    if (!s || typeof s !== "object") throw new Error(`Layer ${i}: expected object`);
+    const layer = s as SerializedLayer;
+    if (typeof layer.id !== "string") throw new Error(`Layer ${i}: missing id`);
+    if (typeof layer.name !== "string") throw new Error(`Layer ${i}: missing name`);
+    if (typeof layer.color !== "string") throw new Error(`Layer ${i}: missing color`);
+    if (!layer.path || typeof layer.path.type !== "string") throw new Error(`Layer ${i}: missing path.type`);
+    const path = deserializePath(layer.path);
+    const created = createLayer(layer.name, Color.fromHex(layer.color), path);
+    return { ...created, id: layer.id, visible: layer.visible === true };
   });
 }
