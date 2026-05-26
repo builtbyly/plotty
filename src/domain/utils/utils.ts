@@ -1,7 +1,7 @@
 import { Layer } from "../entities/Layer";
 import { AnyPath } from "../entities/Path";
 
-type PathConstructor<T extends AnyPath> = abstract new (...args: unknown[]) => T;
+type PathConstructor<T extends AnyPath> = abstract new (...args: never[]) => T;
 
 export function filterLayers<T extends AnyPath>(
   layers: Layer<AnyPath>[],
