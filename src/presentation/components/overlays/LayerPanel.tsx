@@ -6,6 +6,7 @@ import L from "leaflet";
 import "./LayerPanel.css";
 import LayerItem from "./LayerItem";
 import { LogPath } from "../../../domain/entities/LogPath";
+import { Route } from "../../../domain/entities/Route";
 import { Checkbox, FormControlLabel, IconButton } from "@mui/material";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
@@ -25,6 +26,8 @@ interface LayerPanelProps<T extends AnyPath> {
   onTileProviderChanged: (tileProvider: TileProvider) => void;
   replanToggles?: Record<string, { behavioral: boolean; interval: boolean }>;
   onReplanToggle?: (layerId: string, category: "behavioral" | "interval", value: boolean) => void;
+  instructionToggles?: Record<string, boolean>;
+  onInstructionToggle?: (layerId: string, value: boolean) => void;
 }
 
 export const LayerPanel = <T extends AnyPath>({
@@ -40,6 +43,8 @@ export const LayerPanel = <T extends AnyPath>({
   onTileProviderChanged,
   replanToggles = {},
   onReplanToggle,
+  instructionToggles = {},
+  onInstructionToggle,
 }: LayerPanelProps<T>) => {
   const [isScrollable, setIsScrollable] = React.useState(false);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -167,6 +172,23 @@ export const LayerPanel = <T extends AnyPath>({
                         />
                       );
                     })}
+                  </div>
+                )}
+                {layer.path instanceof Route && layer.path.instructions.length > 0 && onInstructionToggle && (
+                  <div style={styles.replanToggles}>
+                    <span style={styles.replanKicker}>Steps</span>
+                    <FormControlLabel
+                      sx={replanLabelSx}
+                      label={`show (${(layer.path as unknown as Route).instructions.length})`}
+                      control={
+                        <Checkbox
+                          size="small"
+                          sx={replanCheckboxSx}
+                          checked={instructionToggles[layer.id] ?? true}
+                          onChange={(e) => onInstructionToggle!(layer.id, e.target.checked)}
+                        />
+                      }
+                    />
                   </div>
                 )}
               </div>

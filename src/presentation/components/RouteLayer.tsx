@@ -155,8 +155,12 @@ const RouteInstructions: React.FC<RouteComponentProps> = ({ route, color }) => {
   );
 };
 
-export const RouteLayer: React.FC<PathComponentProps<Route>> = React.memo(
-  ({ layer }) => {
+interface RouteLayerProps extends PathComponentProps<Route> {
+  showInstructions?: boolean;
+}
+
+export const RouteLayer: React.FC<RouteLayerProps> = React.memo(
+  ({ layer, showInstructions = true }) => {
     const props: RouteComponentProps = {
       route: layer.path,
       color: layer.color.toHex(),
@@ -166,7 +170,7 @@ export const RouteLayer: React.FC<PathComponentProps<Route>> = React.memo(
       <LayerGroup>
         <RoutePoints {...props} />
         <RouteWaypoints {...props} />
-        <RouteInstructions {...props} />
+        {showInstructions && <RouteInstructions {...props} />}
       </LayerGroup>
     );
   }

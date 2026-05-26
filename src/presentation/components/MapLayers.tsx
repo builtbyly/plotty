@@ -20,8 +20,9 @@ import { useLayerStore } from "../hooks/useLayerStore";
 import { onlyInDevelopment, useRenderTime } from "../hooks/useRenderTime";
 import { Z_INDEX } from "../constants/zIndex";
 import { Coordinates } from "../../domain/value-objects/Coordinates";
-import { GeoPathLayers, TtpPathLayers, RouteLayers } from "./LayersRenderer";
+import { GeoPathLayers, TtpPathLayers } from "./LayersRenderer";
 import { LogPathLayer } from "./LogPathLayer";
+import { RouteLayer } from "./RouteLayer";
 import { copyToClipboard } from "../utils/clipboard";
 import { TileProvider } from "../providers/TileProvider";
 
@@ -56,6 +57,11 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
   const getReplanToggle = (id: string) => replanToggles[id] ?? { behavioral: true, interval: true };
   const handleReplanToggle = (id: string, category: "behavioral" | "interval", value: boolean) =>
     setReplanToggles((prev) => ({ ...prev, [id]: { ...getReplanToggle(id), [category]: value } }));
+
+  const [instructionToggles, setInstructionToggles] = React.useState<Record<string, boolean>>({});
+  const getInstructionToggle = (id: string) => instructionToggles[id] ?? true;
+  const handleInstructionToggle = (id: string, value: boolean) =>
+    setInstructionToggles((prev) => ({ ...prev, [id]: value }));
 
   React.useEffect(() => {
     const handleRightClick = (e: L.LeafletMouseEvent) => {
@@ -105,6 +111,8 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         onTileProviderChanged={onTileProviderChanged}
         replanToggles={replanToggles}
         onReplanToggle={handleReplanToggle}
+        instructionToggles={instructionToggles}
+        onInstructionToggle={handleInstructionToggle}
       />
       <GotoDialog
         onCoordinatesChange={(coordinates: Coordinates) => {
@@ -112,7 +120,13 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         }}
       />
       <RulerPanel />
-      <RouteLayers layers={routeLayers} />
+      {routeLayers.filter((l) => l.visible).map((l, i) => (
+        <RouteLayer
+          key={`${i}-${l.id}`}
+          layer={l}
+          showInstructions={getInstructionToggle(l.id)}
+        />
+      ))}
       <GeoPathLayers layers={geoPathLayers} />
       <TtpPathLayers layers={ttpPathLayers} />
       {logPathLayers.filter((l) => l.visible).map((l, i) => {
