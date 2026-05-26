@@ -11,6 +11,6 @@ export class LogPath extends Path<LogPoint> {
     public readonly crashes: CrashEvent[] = [],
     public readonly replanEvents: ReplanEvent[] = []
   ) {
-    super(points, `Log Path ${++LogPath.counter}`);
+    super(points, `Logcat ${++LogPath.counter}`);
   }
 }
