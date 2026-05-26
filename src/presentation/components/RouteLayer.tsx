@@ -1,5 +1,5 @@
-import React from "react";
-import { LayerGroup } from "react-leaflet";
+import React, { useMemo } from "react";
+import { LayerGroup, Marker, Popup } from "react-leaflet";
 import { Point } from "./points/Point";
 import { Origin } from "./points/Origin";
 import { Stop } from "./points/Stop";
@@ -8,9 +8,9 @@ import { Route } from "../../domain/entities/Route";
 import { Coordinates } from "../../domain/value-objects/Coordinates";
 import { usePointFocus } from "../hooks/usePointFocus";
 import { PathComponentProps } from "../shared/PathComponentsProps";
-import { tomtomBlackColor } from "../../shared/colors";
 import { CoordContent } from "./points/CoordContent";
 import { RouteInstruction } from "../../domain/value-objects/RouteInstruction";
+import { createInstructionIcon } from "../shared/routeIcons";
 
 interface RouteComponentProps {
   route: Route;
@@ -105,37 +105,52 @@ const RouteWaypoints: React.FC<RouteComponentProps> = ({ route, color }) => {
   );
 };
 
+const InstructionMarker: React.FC<{
+  instruction: RouteInstruction;
+  index: number;
+  color: string;
+  highlighted: boolean;
+  onReady: (m: L.Marker | null) => void;
+  onClick: () => void;
+}> = ({ instruction, index, color, highlighted, onReady, onClick }) => {
+  const { point } = instruction;
+  const icon = useMemo(() => createInstructionIcon(color, index, highlighted), [color, index, highlighted]);
+  return (
+    <Marker
+      ref={onReady}
+      position={[point.latitude, point.longitude]}
+      icon={icon}
+      eventHandlers={{ click: onClick }}
+    >
+      <Popup>
+        <InstructionText instruction={instruction} color={color} />
+      </Popup>
+    </Marker>
+  );
+};
+
 const RouteInstructions: React.FC<RouteComponentProps> = ({ route, color }) => {
   const instructions = route.instructions;
 
   const {
     handlePointClick,
-    handleGoingForward: gotoNextPoint,
-    handleGoingBackward: gotoPreviousPoint,
     handlePointReady,
+    focusedPointIndex,
   } = usePointFocus(instructions.length, `${route.id.toString()}_instructions`);
 
   return (
     <>
-      {instructions.map((i, index) => {
-        const { instruction: text, point } = i;
-        return (
-          <Point
-            key={`${index}-${point.latitude},${point.longitude}`}
-            title={text}
-            point={new Coordinates(point.latitude, point.longitude)}
-            radius={8}
-            content={<InstructionText instruction={i} />}
-            onReady={(marker) => handlePointReady(index, marker)}
-            onRight={gotoNextPoint}
-            onLeft={gotoPreviousPoint}
-            onClick={() => {
-              handlePointClick(index);
-            }}
-            color={color}
-          />
-        );
-      })}
+      {instructions.map((i, index) => (
+        <InstructionMarker
+          key={`${index}-${i.point.latitude},${i.point.longitude}`}
+          instruction={i}
+          index={index}
+          color={color}
+          highlighted={focusedPointIndex === index}
+          onReady={(m) => handlePointReady(index, m)}
+          onClick={() => handlePointClick(index)}
+        />
+      ))}
     </>
   );
 };
@@ -157,13 +172,13 @@ export const RouteLayer: React.FC<PathComponentProps<Route>> = React.memo(
   }
 );
 
-function InstructionText({ instruction }: { instruction: RouteInstruction }) {
+function InstructionText({ instruction, color }: { instruction: RouteInstruction; color: string }) {
   const { point, instruction: text } = instruction;
   return (
     <div style={styles.root}>
-      <div style={styles.maneuver}>{text}</div>
+      <div style={{ ...styles.maneuver, borderTopColor: color }}>{text}</div>
       <div style={styles.divider} />
-      <CoordContent lat={point.latitude} lng={point.longitude} accentColor={tomtomBlackColor} />
+      <CoordContent lat={point.latitude} lng={point.longitude} accentColor={color} />
     </div>
   );
 }
@@ -179,7 +194,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: "0.82rem",
     fontWeight: 600,
     color: "rgba(0,0,0,0.75)",
-    borderTop: `3px solid ${tomtomBlackColor}`,
+    borderTop: "3px solid",
     paddingTop: "8px",
   },
   divider: {

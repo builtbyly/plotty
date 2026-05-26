@@ -36,6 +36,26 @@ export function createDestinationIcon(color: string, highlighted: boolean): L.Di
   });
 }
 
+export function createInstructionIcon(color: string, index: number, highlighted: boolean): L.DivIcon {
+  const size = 22;
+  const half = size / 2;
+  const ring = highlighted
+    ? `<circle cx="${half}" cy="${half}" r="${half - 1}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="3 2" opacity="0.7"/>`
+    : "";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <circle cx="${half}" cy="${half}" r="${half - 1.5}" fill="white" stroke="${color}" stroke-width="2"/>
+  ${ring}
+  <text x="${half}" y="${half}" dominant-baseline="central" text-anchor="middle" fill="${color}" font-size="9" font-weight="700" font-family="system-ui,sans-serif">${index + 1}</text>
+</svg>`;
+  return L.divIcon({
+    html: `<div style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))">${svg}</div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [half, half],
+    popupAnchor: [0, -half - 4],
+  });
+}
+
 export function createStopIcon(color: string, label: string, highlighted: boolean): L.DivIcon {
   const ring = highlighted
     ? `<circle cx="13" cy="13" r="11.5" fill="none" stroke="white" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.85"/>`
