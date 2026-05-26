@@ -7,6 +7,7 @@ import { AnyPath } from "../entities/Path";
 import { Color } from "../value-objects/Color";
 import { Coordinates } from "../value-objects/Coordinates";
 import { CrashEvent, CrashType } from "../value-objects/CrashEvent";
+import { ReplanEvent, ReplanCategory, ReplanOutcome } from "../value-objects/ReplanEvent";
 import { TtpPoint, TtpPointType } from "../value-objects/TtpPoint";
 import { LogPoint } from "../value-objects/LogPoint";
 import { LogLevel } from "../value-objects/LogLevel";
@@ -39,6 +40,17 @@ type SerializedCrashEvent = {
   nearestPointIndex: number;
 };
 
+type SerializedReplanEvent = {
+  category: string;
+  outcome: string;
+  reason: string;
+  errorMessage: string | null;
+  lineNumber: number;
+  timestamp: number | null;
+  timezoneOffsetMinutes: number | null;
+  nearestPointIndex: number;
+};
+
 type SerializedLogPath = {
   type: "log";
   points: {
@@ -49,10 +61,12 @@ type SerializedLogPath = {
     line: number;
     extra: Record<string, string>;
     timestamp: number | null;
+    timezoneOffsetMinutes: number | null;
     speed: number | null;
     heading: number | null;
   }[];
   crashes?: SerializedCrashEvent[];
+  replanEvents?: SerializedReplanEvent[];
 };
 
 type SerializedRoute = {
@@ -109,6 +123,7 @@ function serializePath(path: AnyPath): SerializedPath {
         line: p.line,
         extra: Object.fromEntries(p.extra),
         timestamp: p.timestamp,
+        timezoneOffsetMinutes: p.timezoneOffsetMinutes,
         speed: p.speed,
         heading: p.heading,
       })),
@@ -118,6 +133,16 @@ function serializePath(path: AnyPath): SerializedPath {
         lineNumber: c.lineNumber,
         timestamp: c.timestamp,
         nearestPointIndex: c.nearestPointIndex,
+      })),
+      replanEvents: path.replanEvents.map((e) => ({
+        category: e.category,
+        outcome: e.outcome,
+        reason: e.reason,
+        errorMessage: e.errorMessage,
+        lineNumber: e.lineNumber,
+        timestamp: e.timestamp,
+        timezoneOffsetMinutes: e.timezoneOffsetMinutes,
+        nearestPointIndex: e.nearestPointIndex,
       })),
     };
   }
@@ -163,6 +188,7 @@ function deserializePath(serialized: SerializedPath): AnyPath {
               p.line,
               new Map(Object.entries(p.extra)),
               p.timestamp,
+              p.timezoneOffsetMinutes ?? null,
               p.speed,
               p.heading
             )
@@ -173,6 +199,16 @@ function deserializePath(serialized: SerializedPath): AnyPath {
           lineNumber: c.lineNumber,
           timestamp: c.timestamp,
           nearestPointIndex: c.nearestPointIndex,
+        })),
+        (serialized.replanEvents ?? []).map((e): ReplanEvent => ({
+          category: e.category as ReplanCategory,
+          outcome: e.outcome as ReplanOutcome,
+          reason: e.reason,
+          errorMessage: e.errorMessage,
+          lineNumber: e.lineNumber,
+          timestamp: e.timestamp,
+          timezoneOffsetMinutes: e.timezoneOffsetMinutes,
+          nearestPointIndex: e.nearestPointIndex,
         }))
       );
     case "geo":

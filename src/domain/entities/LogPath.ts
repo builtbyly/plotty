@@ -1,4 +1,5 @@
 import { CrashEvent } from "../value-objects/CrashEvent";
+import { ReplanEvent } from "../value-objects/ReplanEvent";
 import { LogPoint } from "../value-objects/LogPoint";
 import { Path } from "./Path";
 
@@ -7,7 +8,8 @@ export class LogPath extends Path<LogPoint> {
 
   constructor(
     points: LogPoint[],
-    public readonly crashes: CrashEvent[] = []
+    public readonly crashes: CrashEvent[] = [],
+    public readonly replanEvents: ReplanEvent[] = []
   ) {
     super(points, `Log Path ${++LogPath.counter}`);
   }

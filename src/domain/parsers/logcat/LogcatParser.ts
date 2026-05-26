@@ -2,6 +2,7 @@ import { Maybe } from "../../../shared/Maybe";
 import { LogPath } from "../../entities/LogPath";
 import { LogcatEntry } from "../../value-objects/LogcatEntry";
 import { CrashEvent, CrashType } from "../../value-objects/CrashEvent";
+import { ReplanEvent, ReplanCategory, ReplanOutcome } from "../../value-objects/ReplanEvent";
 import { LogLevel } from "../../value-objects/LogLevel";
 import { LogPoint, ExtraMap } from "../../value-objects/LogPoint";
 import { MaybeParsed, Parser } from "../Parser";
@@ -91,7 +92,7 @@ function buildEntry(
 ): LogcatEntry {
   return new LogcatEntry(
     level,
-    tag,
+    tag.trim(),
     parseInt(pid),
     parseInt(tid),
     toUtcTimestamp(date, time, timezone),
@@ -254,6 +255,55 @@ function detectCrash(
   return null;
 }
 
+// --- Replan detection ---
+
+const replanTriggerRegex = /^Trigger replanning\((.+)\)$/;
+const replanFailedRegex = /^Replanning \((.+)\) failed with error='(.+)'$/;
+
+function replanCategory(reason: string): ReplanCategory {
+  return reason.includes("replan time interval") ? "interval" : "behavioral";
+}
+
+function detectReplan(
+  entry: LogcatEntry | null,
+  lineNumber: number,
+  nearestPointIndex: number
+): ReplanEvent | null {
+  if (entry?.tag !== "K5") return null;
+
+  const triggerMatch = entry.message.match(replanTriggerRegex);
+  if (triggerMatch) {
+    const reason = triggerMatch[1];
+    return {
+      category: replanCategory(reason),
+      outcome: "triggered" as ReplanOutcome,
+      reason,
+      errorMessage: null,
+      lineNumber,
+      timestamp: entry.timestamp,
+      timezoneOffsetMinutes: entry.timezoneOffsetMinutes,
+      nearestPointIndex,
+    };
+  }
+
+  const failedMatch = entry.message.match(replanFailedRegex);
+  if (failedMatch) {
+    const reason = failedMatch[1];
+    return {
+      category: replanCategory(reason),
+      outcome: "failed" as ReplanOutcome,
+      reason,
+      errorMessage: failedMatch[2],
+      lineNumber,
+      timestamp: entry.timestamp,
+      timezoneOffsetMinutes: entry.timezoneOffsetMinutes,
+      nearestPointIndex,
+    };
+  }
+
+  return null;
+}
+
 // --- Public parser ---
 
 export class LogcatParser implements Parser<LogPath> {
@@ -261,6 +311,7 @@ export class LogcatParser implements Parser<LogPath> {
     try {
       const points: LogPoint[] = [];
       const crashes: CrashEvent[] = [];
+      const replanEvents: ReplanEvent[] = [];
 
       text.split("\n").forEach((line, lineNumber) => {
         try {
@@ -277,8 +328,12 @@ export class LogcatParser implements Parser<LogPath> {
             }
           }
 
-          const crash = detectCrash(line, entry, lineNumber, points.length - 1);
-          if (crash !== null) crashes.push(crash);
+          const nearestPointIndex = points.length - 1;
+          const crash = detectCrash(line, entry, lineNumber, nearestPointIndex);
+          if (crash !== null) { crashes.push(crash); return; }
+
+          const replan = detectReplan(entry, lineNumber, nearestPointIndex);
+          if (replan !== null) replanEvents.push(replan);
         } catch {
           // skip malformed entries
         }
@@ -289,7 +344,7 @@ export class LogcatParser implements Parser<LogPath> {
       }
 
       return Maybe.success({
-        paths: [new LogPath(points, crashes)],
+        paths: [new LogPath(points, crashes, replanEvents)],
         message: "Parsed Logcat successfully.",
       });
     } catch (error: unknown) {

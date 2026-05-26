@@ -94,6 +94,87 @@ describe("LogcatParser — timestamp parsing", () => {
   });
 });
 
+// K5 replan lines (MM-DD format, tag "K5")
+const replanTriggerBehavioral =
+  "04-19 10:00:02.000 1234 1234 I K5: Trigger replanning(back to route due to a deviation)";
+const replanTriggerInterval =
+  "04-19 10:00:03.000 1234 1234 I K5: Trigger replanning(replan time interval reached)";
+const replanFailed =
+  "04-19 10:00:04.000 1234 1234 E K5: Replanning (back to route due to a deviation) failed with error='Unable to compute route'";
+
+describe("LogcatParser — replan detection", () => {
+  it("detects behavioral trigger and sets nearestPointIndex to last point before replan", () => {
+    const text = [mapMatcherLine, replanTriggerBehavioral].join("\n");
+    const result = parser.parse(text);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const path = result.value.paths[0] as LogPath;
+      expect(path.replanEvents).toHaveLength(1);
+      expect(path.replanEvents[0].category).toBe("behavioral");
+      expect(path.replanEvents[0].outcome).toBe("triggered");
+      expect(path.replanEvents[0].reason).toBe("back to route due to a deviation");
+      expect(path.replanEvents[0].errorMessage).toBeNull();
+      expect(path.replanEvents[0].nearestPointIndex).toBe(0);
+    }
+  });
+
+  it("detects interval trigger", () => {
+    const text = [mapMatcherLine, replanTriggerInterval].join("\n");
+    const result = parser.parse(text);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const path = result.value.paths[0] as LogPath;
+      expect(path.replanEvents).toHaveLength(1);
+      expect(path.replanEvents[0].category).toBe("interval");
+      expect(path.replanEvents[0].outcome).toBe("triggered");
+    }
+  });
+
+  it("detects failed replan with errorMessage", () => {
+    const text = [mapMatcherLine, replanFailed].join("\n");
+    const result = parser.parse(text);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const path = result.value.paths[0] as LogPath;
+      expect(path.replanEvents).toHaveLength(1);
+      expect(path.replanEvents[0].category).toBe("behavioral");
+      expect(path.replanEvents[0].outcome).toBe("failed");
+      expect(path.replanEvents[0].errorMessage).toBe("Unable to compute route");
+      expect(path.replanEvents[0].nearestPointIndex).toBe(0);
+    }
+  });
+
+  it("assigns nearestPointIndex -1 when replan precedes all points", () => {
+    const text = [replanTriggerBehavioral, mapMatcherLine].join("\n");
+    const result = parser.parse(text);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const path = result.value.paths[0] as LogPath;
+      expect(path.replanEvents).toHaveLength(1);
+      expect(path.replanEvents[0].nearestPointIndex).toBe(-1);
+    }
+  });
+
+  it("tracks nearestPointIndex across multiple points", () => {
+    const text = [mapMatcherLine, mapMatcherLine, replanTriggerBehavioral].join("\n");
+    const result = parser.parse(text);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const path = result.value.paths[0] as LogPath;
+      expect(path.replanEvents[0].nearestPointIndex).toBe(1);
+    }
+  });
+
+  it("produces no replan events when none are present", () => {
+    const result = parser.parse(mapMatcherLine);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const path = result.value.paths[0] as LogPath;
+      expect(path.replanEvents).toHaveLength(0);
+    }
+  });
+});
+
 describe("LogcatParser — crash detection", () => {
   it("detects FATAL EXCEPTION and sets nearestPointIndex to last point before crash", () => {
     const text = [mapMatcherLine, fatalExceptionLine].join("\n");

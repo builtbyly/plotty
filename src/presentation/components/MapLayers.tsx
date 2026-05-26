@@ -20,7 +20,8 @@ import { useLayerStore } from "../hooks/useLayerStore";
 import { onlyInDevelopment, useRenderTime } from "../hooks/useRenderTime";
 import { Z_INDEX } from "../constants/zIndex";
 import { Coordinates } from "../../domain/value-objects/Coordinates";
-import { GeoPathLayers, LogPathLayers, TtpPathLayers, RouteLayers } from "./LayersRenderer";
+import { GeoPathLayers, TtpPathLayers, RouteLayers } from "./LayersRenderer";
+import { LogPathLayer } from "./LogPathLayer";
 import { copyToClipboard } from "../utils/clipboard";
 import { TileProvider } from "../providers/TileProvider";
 
@@ -50,6 +51,11 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
   const geoPathLayers = filterLayers(store.layers, GeoPath);
   const ttpPathLayers = filterLayers(store.layers, TtpPath);
   const logPathLayers = filterLayers(store.layers, LogPath);
+
+  const [replanToggles, setReplanToggles] = React.useState<Record<string, { behavioral: boolean; interval: boolean }>>({});
+  const getReplanToggle = (id: string) => replanToggles[id] ?? { behavioral: true, interval: true };
+  const handleReplanToggle = (id: string, category: "behavioral" | "interval", value: boolean) =>
+    setReplanToggles((prev) => ({ ...prev, [id]: { ...getReplanToggle(id), [category]: value } }));
 
   React.useEffect(() => {
     const handleRightClick = (e: L.LeafletMouseEvent) => {
@@ -97,6 +103,8 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         onColorChange={(layer, hex) => store.recolor(layer.id, hex)}
         onReorder={store.reorder}
         onTileProviderChanged={onTileProviderChanged}
+        replanToggles={replanToggles}
+        onReplanToggle={handleReplanToggle}
       />
       <GotoDialog
         onCoordinatesChange={(coordinates: Coordinates) => {
@@ -107,7 +115,17 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
       <RouteLayers layers={routeLayers} />
       <GeoPathLayers layers={geoPathLayers} />
       <TtpPathLayers layers={ttpPathLayers} />
-      <LogPathLayers layers={logPathLayers} />
+      {logPathLayers.filter((l) => l.visible).map((l, i) => {
+        const t = getReplanToggle(l.id);
+        return (
+          <LogPathLayer
+            key={`${i}-${l.id}`}
+            layer={l}
+            showBehavioral={t.behavioral}
+            showInterval={t.interval}
+          />
+        );
+      })}
     </FocusProvider>
   );
 };

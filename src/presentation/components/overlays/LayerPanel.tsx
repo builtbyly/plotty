@@ -6,7 +6,7 @@ import L from "leaflet";
 import "./LayerPanel.css";
 import LayerItem from "./LayerItem";
 import { LogPath } from "../../../domain/entities/LogPath";
-import { IconButton } from "@mui/material";
+import { Checkbox, FormControlLabel, IconButton } from "@mui/material";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import { TileProviderSelector } from "./TileProviderSelector";
@@ -23,6 +23,8 @@ interface LayerPanelProps<T extends AnyPath> {
   onColorChange: (layer: Layer<T>, hex: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onTileProviderChanged: (tileProvider: TileProvider) => void;
+  replanToggles?: Record<string, { behavioral: boolean; interval: boolean }>;
+  onReplanToggle?: (layerId: string, category: "behavioral" | "interval", value: boolean) => void;
 }
 
 export const LayerPanel = <T extends AnyPath>({
@@ -36,6 +38,8 @@ export const LayerPanel = <T extends AnyPath>({
   onColorChange,
   onReorder,
   onTileProviderChanged,
+  replanToggles = {},
+  onReplanToggle,
 }: LayerPanelProps<T>) => {
   const [isScrollable, setIsScrollable] = React.useState(false);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -141,6 +145,30 @@ export const LayerPanel = <T extends AnyPath>({
                   onMoveDown={i < layers.length - 1 ? () => onReorder(i, i + 1) : undefined}
                   showColorPicker={!(layer.path instanceof LogPath)}
                 />
+                {layer.path instanceof LogPath && layer.path.replanEvents.length > 0 && onReplanToggle && (
+                  <div style={styles.replanToggles}>
+                    <span style={styles.replanKicker}>Replans</span>
+                    {(["behavioral", "interval"] as const).map((cat) => {
+                      const count = (layer.path as unknown as LogPath).replanEvents.filter((e) => e.category === cat).length;
+                      if (count === 0) return null;
+                      return (
+                        <FormControlLabel
+                          key={cat}
+                          sx={replanLabelSx}
+                          label={`${cat} (${count})`}
+                          control={
+                            <Checkbox
+                              size="small"
+                              sx={replanCheckboxSx}
+                              checked={(replanToggles[layer.id] ?? { behavioral: true, interval: true })[cat]}
+                              onChange={(e) => onReplanToggle!(layer.id, cat, e.target.checked)}
+                            />
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -149,6 +177,22 @@ export const LayerPanel = <T extends AnyPath>({
       {basemapSection}
     </div>
   );
+};
+
+const replanLabelSx = {
+  margin: 0,
+  "& .MuiFormControlLabel-label": {
+    fontSize: "0.67rem",
+    color: "rgba(0,0,0,0.42)",
+    fontFamily: "'Roboto', sans-serif",
+    userSelect: "none",
+  },
+};
+
+const replanCheckboxSx = {
+  padding: "2px 6px 2px 0",
+  color: "rgba(0,0,0,0.28)",
+  "&.Mui-checked": { color: "rgba(0,0,0,0.42)" },
 };
 
 const styles: { [key: string]: React.CSSProperties } = {
@@ -232,6 +276,26 @@ const styles: { [key: string]: React.CSSProperties } = {
     letterSpacing: "0.1em",
     textTransform: "uppercase" as const,
     color: "rgba(0,0,0,0.42)",
+  },
+  replanToggles: {
+    display: "flex",
+    flexDirection: "row" as const,
+    alignItems: "center",
+    padding: "4px 10px 5px 14px",
+    gap: "2px",
+    borderBottom: "1px solid rgba(0,0,0,0.06)",
+    borderLeft: "2px solid rgba(0,0,0,0.07)",
+    marginLeft: "12px",
+  },
+  replanKicker: {
+    fontSize: "0.58rem",
+    fontWeight: 700,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase" as const,
+    color: "rgba(0,0,0,0.28)",
+    fontFamily: "'Roboto', sans-serif",
+    marginRight: "6px",
+    flexShrink: 0,
   },
   layerList: {
     display: "flex",
