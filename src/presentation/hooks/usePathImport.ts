@@ -33,7 +33,7 @@ export function usePathImport({
   const [isDraggingOver, setIsDraggingOver] = React.useState(false);
   const dragCounter = React.useRef(0);
 
-  const parseNonBlocking = async (content: string) => {
+  const parseNonBlocking = React.useCallback(async (content: string) => {
     setImporting(true);
     try {
       // Ensure the importing state is rendered before heavy processing.
@@ -49,7 +49,7 @@ export function usePathImport({
     } finally {
       setImporting(false);
     }
-  };
+  }, [onPathsImported]);
 
   React.useEffect(() => {
     if (!target) return;
@@ -127,7 +127,7 @@ export function usePathImport({
         target.removeAttribute("tabindex");
       }
     };
-  }, [onPathsImported, target]);
+  }, [onPathsImported, parseNonBlocking, target]);
 
   return { importing, isDraggingOver };
 }
