@@ -124,20 +124,20 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         }}
       />
       <RulerPanel />
-      {routeLayers.filter((l) => l.visible).map((l, i) => (
+      {routeLayers.filter((l) => l.visible).map((l) => (
         <RouteLayer
-          key={`${i}-${l.id}`}
+          key={l.id}
           layer={l}
           showInstructions={getInstructionToggle(l.id)}
         />
       ))}
       <GeoPathLayers layers={geoPathLayers} />
       <TtpPathLayers layers={ttpPathLayers} />
-      {logPathLayers.filter((l) => l.visible).map((l, i) => {
+      {logPathLayers.filter((l) => l.visible).map((l) => {
         const t = getReplanToggle(l.id);
         return (
           <LogcatPathLayer
-            key={`${i}-${l.id}`}
+            key={l.id}
             layer={l}
             showBehavioral={t.behavioral}
             showInterval={t.interval}
