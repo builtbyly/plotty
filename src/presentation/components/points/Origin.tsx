@@ -44,7 +44,7 @@ export const Origin: React.FC<OriginProps> = ({
       <Popup>
         <PointPopup
           title="O"
-          content={<CoordContent lat={point.latitude} lng={point.longitude} label="Origin" accentColor="#27ae60" />}
+          content={<CoordContent lat={point.latitude} lng={point.longitude} label="Origin" accentColor={color} />}
           onLocateClick={() => {
             map?.flyTo([point.latitude, point.longitude], 18, {
               animate: true,

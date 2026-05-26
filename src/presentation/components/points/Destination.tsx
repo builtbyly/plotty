@@ -44,7 +44,7 @@ export const Destination: React.FC<DestinationProps> = ({
       <Popup>
         <PointPopup
           title="D"
-          content={<CoordContent lat={point.latitude} lng={point.longitude} label="Destination" accentColor="#e74c3c" />}
+          content={<CoordContent lat={point.latitude} lng={point.longitude} label="Destination" accentColor={color} />}
           onLocateClick={() => {
             map?.flyTo([point.latitude, point.longitude], 18, {
               animate: true,

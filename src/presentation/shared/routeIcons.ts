@@ -56,6 +56,24 @@ export function createInstructionIcon(color: string, index: number, highlighted:
   });
 }
 
+export function createCrashIcon(type: "crash" | "anr"): L.DivIcon {
+  const color = type === "crash" ? "#c0392b" : "#d35400";
+  const glyph = type === "crash" ? "✕" : "!";
+  const size = 30;
+  const half = size / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <circle cx="${half}" cy="${half}" r="${half - 1.5}" fill="${color}" stroke="white" stroke-width="2.5"/>
+  <text x="${half}" y="${half}" dominant-baseline="central" text-anchor="middle" fill="white" font-size="15" font-weight="800" font-family="system-ui,sans-serif">${glyph}</text>
+</svg>`;
+  return L.divIcon({
+    html: `<div style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.55));line-height:0;">${svg}</div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [half, half],
+    popupAnchor: [0, -half - 4],
+  });
+}
+
 export function createStopIcon(color: string, label: string, highlighted: boolean): L.DivIcon {
   const ring = highlighted
     ? `<circle cx="13" cy="13" r="11.5" fill="none" stroke="white" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.85"/>`

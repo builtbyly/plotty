@@ -1,7 +1,8 @@
-import React from "react";
-import { CircleMarker, Popup } from "react-leaflet";
+import React, { useMemo } from "react";
+import { Marker, Popup } from "react-leaflet";
 import { CrashEvent } from "../../../domain/value-objects/CrashEvent";
 import { Coordinates } from "../../../domain/value-objects/Coordinates";
+import { createCrashIcon } from "../../shared/routeIcons";
 
 const CRASH_COLOR = "#c0392b";
 const ANR_COLOR = "#d35400";
@@ -24,13 +25,10 @@ export const CrashMarker: React.FC<CrashMarkerProps> = ({ crash, position }) => 
   const isAnr = crash.type === "anr";
   const accentColor = isAnr ? ANR_COLOR : CRASH_COLOR;
   const label = isAnr ? "ANR" : "Fatal Crash";
+  const icon = useMemo(() => createCrashIcon(isAnr ? "anr" : "crash"), [isAnr]);
 
   return (
-    <CircleMarker
-      center={[position.latitude, position.longitude]}
-      radius={16}
-      pathOptions={{ color: "white", weight: 3, fillColor: accentColor, fillOpacity: 0.45, opacity: 0.9 }}
-    >
+    <Marker position={[position.latitude, position.longitude]} icon={icon}>
       <Popup>
         <div style={styles.root}>
           <div style={{ ...styles.header, borderTopColor: accentColor }}>
@@ -50,7 +48,7 @@ export const CrashMarker: React.FC<CrashMarkerProps> = ({ crash, position }) => 
           </div>
         </div>
       </Popup>
-    </CircleMarker>
+    </Marker>
   );
 };
 

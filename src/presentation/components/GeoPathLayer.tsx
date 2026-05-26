@@ -3,6 +3,8 @@ import { LayerGroup, Polyline, Polygon, Popup } from "react-leaflet";
 import { LeafletMouseEvent } from "leaflet";
 import { usePointFocus } from "../hooks/usePointFocus";
 import { Point } from "./points/Point";
+import { Origin } from "./points/Origin";
+import { Destination } from "./points/Destination";
 import { GeoPathPopup } from "./points/GeoPathPopup";
 import { GeoPath } from "../../domain/entities/GeoPath";
 import { PathComponentProps } from "../shared/PathComponentsProps";
@@ -44,21 +46,40 @@ export const GeoPathLayer: React.FC<PathComponentProps<GeoPath>> = React.memo(({
           <GeoPathPopup name={layer.path.getName()} properties={layer.path.properties} />
         </Popup>
       )}
-      {points.map((point, index) => (
-        <Point
-          key={`${index}-${point.latitude},${point.longitude}`}
-          title={`${index}`}
-          point={point}
-          onReady={(marker) => handlePointReady(index, marker)}
-          onRight={handleGoingForward}
-          onLeft={handleGoingBackward}
-          onClick={() => handlePointClick(index)}
-          highlighted={index === focusedPointIndex}
-          color={color}
-          radius={renderHint === "points" ? 8 : 5}
-          showCopyButton={false}
-        />
-      ))}
+      {points.map((point, index) => {
+        const isFirst = index === 0;
+        const isLast = index === points.length - 1;
+        if (renderHint === "line" && points.length >= 2 && (isFirst || isLast)) {
+          const Component = isFirst ? Origin : Destination;
+          return (
+            <Component
+              key={`${index}-${point.latitude},${point.longitude}`}
+              point={point}
+              color={color}
+              highlighted={index === focusedPointIndex}
+              onReady={(marker) => handlePointReady(index, marker)}
+              onRight={handleGoingForward}
+              onLeft={handleGoingBackward}
+              onClick={() => handlePointClick(index)}
+            />
+          );
+        }
+        return (
+          <Point
+            key={`${index}-${point.latitude},${point.longitude}`}
+            title={`${index}`}
+            point={point}
+            onReady={(marker) => handlePointReady(index, marker)}
+            onRight={handleGoingForward}
+            onLeft={handleGoingBackward}
+            onClick={() => handlePointClick(index)}
+            highlighted={index === focusedPointIndex}
+            color={color}
+            radius={renderHint === "points" ? 8 : 5}
+            showCopyButton={false}
+          />
+        );
+      })}
     </LayerGroup>
   );
 });

@@ -30,6 +30,8 @@ export const TtpPathLayer: React.FC<PathComponentProps<TtpPath>> = React.memo(({
       <Origin
         key={0}
         point={origin}
+        color={layer.color.toHex()}
+        highlighted={focusedPointIndex === 0}
         onReady={(marker) => {
           setMarker(0, marker);
         }}
@@ -63,6 +65,8 @@ export const TtpPathLayer: React.FC<PathComponentProps<TtpPath>> = React.memo(({
       <Destination
         key={points.length - 1}
         point={destination}
+        color={layer.color.toHex()}
+        highlighted={focusedPointIndex === points.length - 1}
         onReady={(marker) => {
           setMarker(points.length - 1, marker);
         }}
