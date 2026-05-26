@@ -28,6 +28,9 @@ export function useGistLoad(
         if (!file) throw new Error("plotty-session.json not found in gist");
         let content: string;
         if (file.truncated) {
+          if (!file.raw_url.startsWith("https://gist.githubusercontent.com/")) {
+            throw new Error("Unexpected raw_url origin");
+          }
           const rawRes = await fetch(file.raw_url, { signal: controller.signal });
           if (!rawRes.ok) throw new Error(`raw fetch HTTP ${rawRes.status}`);
           content = await rawRes.text();
