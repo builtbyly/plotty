@@ -5,7 +5,7 @@ import { Layer } from "../../../domain/entities/Layer";
 import L from "leaflet";
 import "./LayerPanel.css";
 import LayerItem from "./LayerItem";
-import { LogPath } from "../../../domain/entities/LogPath";
+import { LogcatPath } from "../../../domain/entities/LogcatPath";
 import { Route } from "../../../domain/entities/Route";
 import { Checkbox, FormControlLabel, IconButton } from "@mui/material";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
@@ -148,13 +148,13 @@ export const LayerPanel = <T extends AnyPath>({
                   onColorChange={(hex) => onColorChange(layer, hex)}
                   onMoveUp={i > 0 ? () => onReorder(i, i - 1) : undefined}
                   onMoveDown={i < layers.length - 1 ? () => onReorder(i, i + 1) : undefined}
-                  showColorPicker={!(layer.path instanceof LogPath)}
+                  showColorPicker={!(layer.path instanceof LogcatPath)}
                 />
-                {layer.path instanceof LogPath && layer.path.replanEvents.length > 0 && onReplanToggle && (
+                {layer.path instanceof LogcatPath && layer.path.replanEvents.length > 0 && onReplanToggle && (
                   <div style={styles.replanToggles}>
                     <span style={styles.replanKicker}>Replans</span>
                     {(["behavioral", "interval"] as const).map((cat) => {
-                      const count = (layer.path as unknown as LogPath).replanEvents.filter((e) => e.category === cat).length;
+                      const count = (layer.path as unknown as LogcatPath).replanEvents.filter((e) => e.category === cat).length;
                       if (count === 0) return null;
                       return (
                         <FormControlLabel
@@ -176,7 +176,7 @@ export const LayerPanel = <T extends AnyPath>({
                 )}
                 {layer.path instanceof Route && layer.path.instructions.length > 0 && onInstructionToggle && (
                   <div style={styles.replanToggles}>
-                    <span style={styles.replanKicker}>Steps</span>
+                    <span style={styles.replanKicker}>Instructions</span>
                     <FormControlLabel
                       sx={replanLabelSx}
                       label={`show (${(layer.path as unknown as Route).instructions.length})`}

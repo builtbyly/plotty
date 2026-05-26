@@ -1,7 +1,7 @@
 import React from "react";
 import { AnyPath } from "../../domain/entities/Path";
 import { GeoPath } from "../../domain/entities/GeoPath";
-import { LogPath } from "../../domain/entities/LogPath";
+import { LogcatPath } from "../../domain/entities/LogcatPath";
 import { TtpPath } from "../../domain/entities/TtpPath";
 import { Route } from "../../domain/entities/Route";
 import {
@@ -10,7 +10,7 @@ import {
   arePathComponentsPropsEqual,
 } from "../shared/PathComponentsProps";
 import { GeoPathLayer } from "./GeoPathLayer";
-import { LogPathLayer } from "./LogPathLayer";
+import { LogcatPathLayer } from "./LogcatPathLayer";
 import { TtpPathLayer } from "./TtpPathLayer";
 import { RouteLayer } from "./RouteLayer";
 
@@ -27,6 +27,6 @@ function createLayersComponent<T extends AnyPath>(
 }
 
 export const GeoPathLayers = createLayersComponent<GeoPath>(GeoPathLayer);
-export const LogPathLayers = createLayersComponent<LogPath>(LogPathLayer);
+export const LogcatPathLayers = createLayersComponent<LogcatPath>(LogcatPathLayer);
 export const TtpPathLayers = createLayersComponent<TtpPath>(TtpPathLayer);
 export const RouteLayers = createLayersComponent<Route>(RouteLayer);

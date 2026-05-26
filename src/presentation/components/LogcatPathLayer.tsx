@@ -5,12 +5,12 @@ import { CrashMarker } from "./points/CrashMarker";
 import { ReplanMarker } from "./points/ReplanMarker";
 import { usePointFocus } from "../hooks/usePointFocus";
 import { PathComponentProps } from "../shared/PathComponentsProps";
-import { LogPath } from "../../domain/entities/LogPath";
+import { LogcatPath } from "../../domain/entities/LogcatPath";
 import { LogPointPopup } from "./points/LogPointPopup";
 import { LogPoint } from "../../domain/value-objects/LogPoint";
 import { getLogTagColor } from "../utils/logTagColors";
 
-interface LogPathLayerProps extends PathComponentProps<LogPath> {
+interface LogcatPathLayerProps extends PathComponentProps<LogcatPath> {
   showBehavioral?: boolean;
   showInterval?: boolean;
 }
@@ -23,7 +23,7 @@ const getPointStyle = (point: LogPoint) => {
   };
 };
 
-export const LogPathLayer: React.FC<LogPathLayerProps> = React.memo(
+export const LogcatPathLayer: React.FC<LogcatPathLayerProps> = React.memo(
   ({ layer, showBehavioral = true, showInterval = true }) => {
     const points = layer.path.points;
 

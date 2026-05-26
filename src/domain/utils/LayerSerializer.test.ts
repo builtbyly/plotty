@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { serializeLayers, deserializeLayers } from "./LayerSerializer";
 import { createLayer } from "../entities/Layer";
-import { LogPath } from "../entities/LogPath";
+import { LogcatPath } from "../entities/LogcatPath";
 import { Color } from "../value-objects/Color";
 import { Path } from "../entities/Path";
 import { Coordinates } from "../value-objects/Coordinates";
@@ -25,7 +25,7 @@ describe("LayerSerializer", () => {
   });
 });
 
-describe("LayerSerializer — LogPath crash round-trip", () => {
+describe("LayerSerializer — LogcatPath crash round-trip", () => {
   it("serializes and deserializes crashes correctly", () => {
     const crash: CrashEvent = {
       type: "fatal-exception",
@@ -34,12 +34,12 @@ describe("LayerSerializer — LogPath crash round-trip", () => {
       timestamp: 1000,
       nearestPointIndex: 0,
     };
-    const path = new LogPath([samplePoint], [crash]);
+    const path = new LogcatPath([samplePoint], [crash]);
     const layer = createLayer("test", Color.fromHex("#ff0000"), path);
 
     const json = serializeLayers([layer]);
     const restored = deserializeLayers(json);
-    const restoredPath = restored[0].path as LogPath;
+    const restoredPath = restored[0].path as LogcatPath;
 
     expect(restoredPath.crashes).toHaveLength(1);
     expect(restoredPath.crashes[0].type).toBe("fatal-exception");
@@ -47,7 +47,7 @@ describe("LayerSerializer — LogPath crash round-trip", () => {
     expect(restoredPath.crashes[0].nearestPointIndex).toBe(0);
   });
 
-  it("deserializes legacy LogPath (no crashes field) as empty array", () => {
+  it("deserializes legacy LogcatPath (no crashes field) as empty array", () => {
     const legacyJson = JSON.stringify([{
       id: "legacy-id",
       name: "Legacy",
@@ -71,6 +71,6 @@ describe("LayerSerializer — LogPath crash round-trip", () => {
     }]);
 
     const layers = deserializeLayers(legacyJson);
-    expect((layers[0].path as LogPath).crashes).toEqual([]);
+    expect((layers[0].path as LogcatPath).crashes).toEqual([]);
   });
 });

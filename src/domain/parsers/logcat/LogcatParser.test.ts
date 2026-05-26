@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { LogcatParser } from "./LogcatParser";
-import { LogPath } from "../../entities/LogPath";
+import { LogcatPath } from "../../entities/LogcatPath";
 import { Maybe } from "../../../shared/Maybe";
 
 const parser = new LogcatParser();
@@ -108,7 +108,7 @@ describe("LogcatParser — replan detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.replanEvents).toHaveLength(1);
       expect(path.replanEvents[0].category).toBe("behavioral");
       expect(path.replanEvents[0].outcome).toBe("triggered");
@@ -123,7 +123,7 @@ describe("LogcatParser — replan detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.replanEvents).toHaveLength(1);
       expect(path.replanEvents[0].category).toBe("interval");
       expect(path.replanEvents[0].outcome).toBe("triggered");
@@ -135,7 +135,7 @@ describe("LogcatParser — replan detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.replanEvents).toHaveLength(1);
       expect(path.replanEvents[0].category).toBe("behavioral");
       expect(path.replanEvents[0].outcome).toBe("failed");
@@ -149,7 +149,7 @@ describe("LogcatParser — replan detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.replanEvents).toHaveLength(1);
       expect(path.replanEvents[0].nearestPointIndex).toBe(-1);
     }
@@ -160,7 +160,7 @@ describe("LogcatParser — replan detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.replanEvents[0].nearestPointIndex).toBe(1);
     }
   });
@@ -169,7 +169,7 @@ describe("LogcatParser — replan detection", () => {
     const result = parser.parse(mapMatcherLine);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.replanEvents).toHaveLength(0);
     }
   });
@@ -181,7 +181,7 @@ describe("LogcatParser — crash detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.crashes).toHaveLength(1);
       expect(path.crashes[0].type).toBe("fatal-exception");
       expect(path.crashes[0].nearestPointIndex).toBe(0);
@@ -194,7 +194,7 @@ describe("LogcatParser — crash detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.crashes).toHaveLength(1);
       expect(path.crashes[0].nearestPointIndex).toBe(-1);
     }
@@ -205,7 +205,7 @@ describe("LogcatParser — crash detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.crashes).toHaveLength(1);
       expect(path.crashes[0].type).toBe("fatal-signal");
       expect(path.crashes[0].description).toMatch(/Fatal signal 11/);
@@ -217,7 +217,7 @@ describe("LogcatParser — crash detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.crashes).toHaveLength(1);
       expect(path.crashes[0].type).toBe("anr");
       expect(path.crashes[0].description).toMatch(/ANR in com\.example/);
@@ -229,7 +229,7 @@ describe("LogcatParser — crash detection", () => {
     const result = parser.parse(text);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.crashes[0].nearestPointIndex).toBe(1);
     }
   });
@@ -238,7 +238,7 @@ describe("LogcatParser — crash detection", () => {
     const result = parser.parse(mapMatcherLine);
     expect(Maybe.isSuccess(result)).toBe(true);
     if (Maybe.isSuccess(result)) {
-      const path = result.value.paths[0] as LogPath;
+      const path = result.value.paths[0] as LogcatPath;
       expect(path.crashes).toHaveLength(0);
     }
   });

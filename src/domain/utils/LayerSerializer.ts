@@ -1,6 +1,6 @@
 import { Layer, createLayer } from "../entities/Layer";
 import { GeoPath, GeoRenderHint } from "../entities/GeoPath";
-import { LogPath } from "../entities/LogPath";
+import { LogcatPath } from "../entities/LogcatPath";
 import { TtpPath } from "../entities/TtpPath";
 import { Route } from "../entities/Route";
 import { AnyPath } from "../entities/Path";
@@ -51,7 +51,7 @@ type SerializedReplanEvent = {
   nearestPointIndex: number;
 };
 
-type SerializedLogPath = {
+type SerializedLogcatPath = {
   type: "log";
   points: {
     latitude: number;
@@ -77,7 +77,7 @@ type SerializedRoute = {
 type SerializedPath =
   | SerializedGeoPath
   | SerializedTtpPath
-  | SerializedLogPath
+  | SerializedLogcatPath
   | SerializedRoute;
 
 type SerializedLayer = {
@@ -112,7 +112,7 @@ function serializePath(path: AnyPath): SerializedPath {
       })),
     };
   }
-  if (path instanceof LogPath) {
+  if (path instanceof LogcatPath) {
     return {
       type: "log",
       points: path.points.map((p) => ({
@@ -177,7 +177,7 @@ function deserializePath(serialized: SerializedPath): AnyPath {
         )
       );
     case "log":
-      return new LogPath(
+      return new LogcatPath(
         serialized.points.map(
           (p) =>
             new LogPoint(

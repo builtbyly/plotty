@@ -5,6 +5,6 @@ export interface CrashEvent {
   readonly description: string;
   readonly lineNumber: number;
   readonly timestamp: number | null;
-  /** Index into LogPath.points[] of the last coordinate-bearing point seen before this crash. -1 means the crash preceded all points. */
+  /** Index into LogcatPath.points[] of the last coordinate-bearing point seen before this crash. -1 means the crash preceded all points. */
   readonly nearestPointIndex: number;
 }

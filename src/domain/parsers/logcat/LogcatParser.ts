@@ -1,5 +1,5 @@
 import { Maybe } from "../../../shared/Maybe";
-import { LogPath } from "../../entities/LogPath";
+import { LogcatPath } from "../../entities/LogcatPath";
 import { LogcatEntry } from "../../value-objects/LogcatEntry";
 import { CrashEvent, CrashType } from "../../value-objects/CrashEvent";
 import { ReplanEvent, ReplanCategory, ReplanOutcome } from "../../value-objects/ReplanEvent";
@@ -306,8 +306,8 @@ function detectReplan(
 
 // --- Public parser ---
 
-export class LogcatParser implements Parser<LogPath> {
-  parse(text: string): MaybeParsed<LogPath> {
+export class LogcatParser implements Parser<LogcatPath> {
+  parse(text: string): MaybeParsed<LogcatPath> {
     try {
       const points: LogPoint[] = [];
       const crashes: CrashEvent[] = [];
@@ -344,7 +344,7 @@ export class LogcatParser implements Parser<LogPath> {
       }
 
       return Maybe.success({
-        paths: [new LogPath(points, crashes, replanEvents)],
+        paths: [new LogcatPath(points, crashes, replanEvents)],
         message: "Parsed Logcat successfully.",
       });
     } catch (error: unknown) {

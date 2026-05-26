@@ -9,7 +9,7 @@ import { FocusProvider } from "../contexts/FocusContext";
 import { GeoPath } from "../../domain/entities/GeoPath";
 import { TtpPath } from "../../domain/entities/TtpPath";
 import { Route } from "../../domain/entities/Route";
-import { LogPath } from "../../domain/entities/LogPath";
+import { LogcatPath } from "../../domain/entities/LogcatPath";
 import { useMapUtils } from "../hooks/useMapUtils";
 import { RulerPanel } from "./overlays/RulerPanel";
 import { usePathImport } from "../hooks/usePathImport";
@@ -21,7 +21,7 @@ import { onlyInDevelopment, useRenderTime } from "../hooks/useRenderTime";
 import { Z_INDEX } from "../constants/zIndex";
 import { Coordinates } from "../../domain/value-objects/Coordinates";
 import { GeoPathLayers, TtpPathLayers } from "./LayersRenderer";
-import { LogPathLayer } from "./LogPathLayer";
+import { LogcatPathLayer } from "./LogcatPathLayer";
 import { RouteLayer } from "./RouteLayer";
 import { copyToClipboard } from "../utils/clipboard";
 import { TileProvider } from "../providers/TileProvider";
@@ -51,7 +51,7 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
   const routeLayers = filterLayers(store.layers, Route);
   const geoPathLayers = filterLayers(store.layers, GeoPath);
   const ttpPathLayers = filterLayers(store.layers, TtpPath);
-  const logPathLayers = filterLayers(store.layers, LogPath);
+  const logPathLayers = filterLayers(store.layers, LogcatPath);
 
   const [replanToggles, setReplanToggles] = React.useState<Record<string, { behavioral: boolean; interval: boolean }>>({});
   const getReplanToggle = (id: string) => replanToggles[id] ?? { behavioral: true, interval: true };
@@ -132,7 +132,7 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
       {logPathLayers.filter((l) => l.visible).map((l, i) => {
         const t = getReplanToggle(l.id);
         return (
-          <LogPathLayer
+          <LogcatPathLayer
             key={`${i}-${l.id}`}
             layer={l}
             showBehavioral={t.behavioral}

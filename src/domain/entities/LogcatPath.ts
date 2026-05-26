@@ -3,7 +3,7 @@ import { ReplanEvent } from "../value-objects/ReplanEvent";
 import { LogPoint } from "../value-objects/LogPoint";
 import { Path } from "./Path";
 
-export class LogPath extends Path<LogPoint> {
+export class LogcatPath extends Path<LogPoint> {
   private static counter = 0;
 
   constructor(
@@ -11,6 +11,6 @@ export class LogPath extends Path<LogPoint> {
     public readonly crashes: CrashEvent[] = [],
     public readonly replanEvents: ReplanEvent[] = []
   ) {
-    super(points, `Logcat ${++LogPath.counter}`);
+    super(points, `Logcat ${++LogcatPath.counter}`);
   }
 }
