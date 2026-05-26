@@ -1,4 +1,5 @@
 import React from "react";
+import { toast } from "react-toastify";
 import { Layer } from "../../domain/entities/Layer";
 import { AnyPath } from "../../domain/entities/Path";
 import { serializeLayers, deserializeLayers } from "../../domain/utils/LayerSerializer";
@@ -18,12 +19,16 @@ function loadFromStorage(): Layer<AnyPath>[] {
 
 export function usePersistedLayers() {
   const [layers, setLayers] = React.useState<Layer<AnyPath>[]>(() => loadFromStorage());
+  const hasWarnedRef = React.useRef(false);
 
   React.useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, serializeLayers(layers));
     } catch {
-      // storage quota exceeded or serialization error — fail silently
+      if (!hasWarnedRef.current) {
+        hasWarnedRef.current = true;
+        toast.warn("Couldn't save layers — changes won't persist after refresh.");
+      }
     }
   }, [layers]);
 
