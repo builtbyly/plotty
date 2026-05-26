@@ -7,9 +7,13 @@ import "./LayerPanel.css";
 import LayerItem from "./LayerItem";
 import { LogcatPath } from "../../../domain/entities/LogcatPath";
 import { Route } from "../../../domain/entities/Route";
-import { Checkbox, FormControlLabel, IconButton } from "@mui/material";
+import { Checkbox, CircularProgress, FormControlLabel, IconButton } from "@mui/material";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import ShareIcon from "@mui/icons-material/Share";
+import KeyIcon from "@mui/icons-material/Key";
+import { useGistShare } from "../../hooks/useGistShare";
+import PasswordInput from "../../providers/PasswordInput";
 import { TileProviderSelector } from "./TileProviderSelector";
 import { TileProvider } from "../../providers/TileProvider";
 
@@ -51,6 +55,9 @@ export const LayerPanel = <T extends AnyPath>({
   const scrollListRef = React.useRef<HTMLDivElement>(null);
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [overIndex, setOverIndex] = React.useState<number | null>(null);
+  const { share, sharing } = useGistShare(layers as Layer<AnyPath>[]);
+  const [showPatInput, setShowPatInput] = React.useState(false);
+  const [pat, setPat] = React.useState(() => localStorage.getItem("github_pat") ?? "");
 
   React.useEffect(() => {
     const panel = panelRef.current;
@@ -96,14 +103,44 @@ export const LayerPanel = <T extends AnyPath>({
               <h3 style={styles.title}>Layers</h3>
               <p style={styles.subtitle}>Imported paths and routes</p>
             </div>
-            <IconButton
-              aria-label="clear all layers"
-              size="small"
-              onClick={onClearAll}
-            >
-              <DeleteSweepIcon fontSize="small" />
-            </IconButton>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <IconButton
+                aria-label="share layers"
+                size="small"
+                disabled={layers.length === 0 || sharing}
+                onClick={() => { void share(); }}
+              >
+                {sharing ? <CircularProgress size={16} /> : <ShareIcon fontSize="small" />}
+              </IconButton>
+              <IconButton
+                aria-label="configure GitHub PAT"
+                size="small"
+                onClick={() => setShowPatInput((v) => !v)}
+              >
+                <KeyIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                aria-label="clear all layers"
+                size="small"
+                onClick={onClearAll}
+              >
+                <DeleteSweepIcon fontSize="small" />
+              </IconButton>
+            </div>
           </div>
+          {showPatInput && (
+            <div style={styles.patSection}>
+              <PasswordInput
+                label="GitHub PAT"
+                initialValue={pat}
+                onValueChange={(v) => {
+                  setPat(v);
+                  localStorage.setItem("github_pat", v);
+                }}
+                compact
+              />
+            </div>
+          )}
           <div
             ref={scrollListRef}
             role="list"
@@ -318,6 +355,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: "'Roboto', sans-serif",
     marginRight: "6px",
     flexShrink: 0,
+  },
+  patSection: {
+    width: "100%",
+    padding: "6px 10px 6px 12px",
+    borderBottom: "1px solid rgba(0,0,0,0.06)",
+    boxSizing: "border-box" as const,
   },
   layerList: {
     display: "flex",

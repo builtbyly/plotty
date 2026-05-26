@@ -17,6 +17,7 @@ import { AnyPath } from "../../domain/entities/Path";
 import { Color } from "../../domain/value-objects/Color";
 import { useColors } from "../hooks/useLayerColors";
 import { useLayerStore } from "../hooks/useLayerStore";
+import { useGistLoad } from "../hooks/useGistLoad";
 import { onlyInDevelopment, useRenderTime } from "../hooks/useRenderTime";
 import { Z_INDEX } from "../constants/zIndex";
 import { Coordinates } from "../../domain/value-objects/Coordinates";
@@ -35,6 +36,11 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
 
   const map = useMap();
   const store = useLayerStore();
+  const { flyToBoundingBox, flyToCoordinates } = useMapUtils();
+  useGistLoad(store.clearAll, store.addLayers, (layers) => {
+    const allPoints = layers.flatMap((l) => l.path.points);
+    flyToBoundingBox(allPoints);
+  });
   const { getNextColor } = useColors();
 
   const { importing, isDraggingOver } = usePathImport({
@@ -80,8 +86,6 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
       map.off("contextmenu", handleRightClick);
     };
   }, [map]);
-
-  const { flyToBoundingBox, flyToCoordinates } = useMapUtils();
 
   return (
     <FocusProvider>
