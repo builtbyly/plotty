@@ -7,10 +7,11 @@ import "./LayerPanel.css";
 import LayerItem from "./LayerItem";
 import { LogcatPath } from "../../../domain/entities/LogcatPath";
 import { Route } from "../../../domain/entities/Route";
-import { Checkbox, CircularProgress, FormControlLabel, IconButton } from "@mui/material";
+import { Checkbox, CircularProgress, FormControlLabel, IconButton, Tooltip } from "@mui/material";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import ShareIcon from "@mui/icons-material/Share";
+import CheckIcon from "@mui/icons-material/Check";
 import KeyIcon from "@mui/icons-material/Key";
 import { useGistShare } from "../../hooks/useGistShare";
 import PasswordInput from "../../providers/PasswordInput";
@@ -55,7 +56,7 @@ export const LayerPanel = <T extends AnyPath>({
   const scrollListRef = React.useRef<HTMLDivElement>(null);
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [overIndex, setOverIndex] = React.useState<number | null>(null);
-  const { share, sharing } = useGistShare(layers as Layer<AnyPath>[]);
+  const { share, sharing, shared } = useGistShare(layers as Layer<AnyPath>[]);
   const [showPatInput, setShowPatInput] = React.useState(false);
   const [pat, setPat] = React.useState(() => localStorage.getItem("github_pat") ?? "");
 
@@ -104,28 +105,37 @@ export const LayerPanel = <T extends AnyPath>({
               <p style={styles.subtitle}>Imported paths and routes</p>
             </div>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <IconButton
-                aria-label="share layers"
-                size="small"
-                disabled={layers.length === 0 || sharing}
-                onClick={() => { void share(); }}
-              >
-                {sharing ? <CircularProgress size={16} /> : <ShareIcon fontSize="small" />}
-              </IconButton>
-              <IconButton
-                aria-label="configure GitHub PAT"
-                size="small"
-                onClick={() => setShowPatInput((v) => !v)}
-              >
-                <KeyIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                aria-label="clear all layers"
-                size="small"
-                onClick={onClearAll}
-              >
-                <DeleteSweepIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title={shared ? "Link copied!" : "Share session"} placement="left">
+                <span>
+                  <IconButton
+                    aria-label="share layers"
+                    size="small"
+                    disabled={layers.length === 0 || sharing}
+                    onClick={() => { void share(); }}
+                    sx={shared ? { color: "green" } : undefined}
+                  >
+                    {sharing ? <CircularProgress size={16} /> : shared ? <CheckIcon fontSize="small" /> : <ShareIcon fontSize="small" />}
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title="Configure GitHub PAT" placement="left">
+                <IconButton
+                  aria-label="configure GitHub PAT"
+                  size="small"
+                  onClick={() => setShowPatInput((v) => !v)}
+                >
+                  <KeyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Clear all layers" placement="left">
+                <IconButton
+                  aria-label="clear all layers"
+                  size="small"
+                  onClick={onClearAll}
+                >
+                  <DeleteSweepIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </div>
           </div>
           {showPatInput && (

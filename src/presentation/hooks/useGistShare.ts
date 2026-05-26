@@ -7,8 +7,9 @@ import { serializeLayers } from "../../domain/utils/LayerSerializer";
 const PAT_KEY = "github_pat";
 const GIST_API = "https://api.github.com/gists";
 
-export function useGistShare(layers: Layer<AnyPath>[]): { share: () => Promise<void>; sharing: boolean } {
+export function useGistShare(layers: Layer<AnyPath>[]): { share: () => Promise<void>; sharing: boolean; shared: boolean } {
   const [sharing, setSharing] = React.useState(false);
+  const [shared, setShared] = React.useState(false);
 
   const share = React.useCallback(async () => {
     const pat = localStorage.getItem(PAT_KEY) ?? "";
@@ -35,6 +36,8 @@ export function useGistShare(layers: Layer<AnyPath>[]): { share: () => Promise<v
       const url = `${window.location.origin}${window.location.pathname}?gist=${data.id}`;
       await navigator.clipboard.writeText(url);
       toast("Link copied!");
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
     } catch (e) {
       const status = (e as { status?: number }).status;
       if (status === 401) toast.error("Invalid GitHub PAT — update it via the key button.");
@@ -45,5 +48,5 @@ export function useGistShare(layers: Layer<AnyPath>[]): { share: () => Promise<v
     }
   }, [layers]);
 
-  return { share, sharing };
+  return { share, sharing, shared };
 }
