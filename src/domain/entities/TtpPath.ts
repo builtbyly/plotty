@@ -11,6 +11,6 @@ export class TtpPath extends Path<TtpPoint> {
   private static counter = 0;
 
   constructor(points: TtpPoint[]) {
-    super(points, `TTP Path ${++TtpPath.counter}`);
+    super(points, `TTP ${++TtpPath.counter}`);
   }
 }
