@@ -62,28 +62,21 @@ const logcatFormats: LogcatFormat[] = [
 function toUtcTimestamp(date: string, time: string, timezone?: string): number {
   if (date.length === 0 || time.length === 0) return -1;
 
-  const result = new Date();
-  if (date.includes("-")) {
-    const [month, day] = date.split("-").map(Number);
-    const [hoursStr, minutesStr, secondsStr] = time.split(":");
-    const [sec, ms] = secondsStr.split(".").map(Number);
-
-    result.setMonth(month - 1);
-    result.setDate(day);
-    result.setHours(Number(hoursStr), Number(minutesStr), sec, ms);
-
-    if (timezone) {
-      const tzOffset = parseInt(timezone);
-      const localOffset = result.getTimezoneOffset();
-      result.setMinutes(result.getMinutes() + localOffset - tzOffset);
-    }
-  } else {
-    const [hoursStr, minutesStr, secondsStr] = time.split(":");
-    const [sec, ms] = secondsStr.split(".").map(Number);
-    result.setHours(Number(hoursStr), Number(minutesStr), sec, ms);
+  if (timezone) {
+    const tz = timezone.replace(/([+-])(\d{2})(\d{2})/, "$1$2:$3");
+    return new Date(`${date}T${time}${tz}`).getTime();
   }
 
-  return result.getTime();
+  const fullDate = date.length === 5
+    ? `${new Date().getFullYear()}-${date}`
+    : date;
+  return new Date(`${fullDate}T${time}`).getTime();
+}
+
+function parseTimezoneOffsetMinutes(timezone: string): number {
+  const sign = timezone.startsWith("-") ? -1 : 1;
+  const abs = timezone.replace(/[+-]/, "");
+  return sign * (Number(abs.slice(0, 2)) * 60 + Number(abs.slice(2, 4)));
 }
 
 function buildEntry(
@@ -102,7 +95,8 @@ function buildEntry(
     parseInt(pid),
     parseInt(tid),
     toUtcTimestamp(date, time, timezone),
-    message
+    message,
+    timezone != null ? parseTimezoneOffsetMinutes(timezone) : null
   );
 }
 
@@ -205,7 +199,8 @@ function toLogPoint(entry: LogcatEntry, message: LogcatMessage, lineNumber: numb
       entry.tag,
       lineNumber,
       message.extra,
-      entry.timestamp
+      entry.timestamp,
+      entry.timezoneOffsetMinutes
     );
   } catch {
     return null;

@@ -70,6 +70,30 @@ describe("LogcatParser", () => {
   });
 });
 
+describe("LogcatParser — timestamp parsing", () => {
+  it("parses YYYY-MM-DD timestamp with timezone offset to correct UTC epoch", () => {
+    const line =
+      "2026-05-22 06:57:23.039 +0200 6634 10433 I MapMatcherOrchestrator: MatchLocation result: lat: 52.37403, lon: 4.88969, arc_key: 123, on road: true";
+    const result = parser.parse(line);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const ts = result.value.paths[0].points[0].timestamp;
+      expect(ts).toBe(Date.UTC(2026, 4, 22, 4, 57, 23, 39));
+    }
+  });
+
+  it("parses MM-DD timestamp without timezone", () => {
+    const line =
+      "05-22 06:57:23.039 6634 6634 I MapMatcher: MatchLocation result: lat: 52.37403, lon: 4.88969, arc_key: 123, on road: true";
+    const result = parser.parse(line);
+    expect(Maybe.isSuccess(result)).toBe(true);
+    if (Maybe.isSuccess(result)) {
+      const ts = result.value.paths[0].points[0].timestamp;
+      expect(ts).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe("LogcatParser — crash detection", () => {
   it("detects FATAL EXCEPTION and sets nearestPointIndex to last point before crash", () => {
     const text = [mapMatcherLine, fatalExceptionLine].join("\n");

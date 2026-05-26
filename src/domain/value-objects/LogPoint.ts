@@ -20,6 +20,7 @@ export class LogPoint extends RoutePoint {
     public readonly line: number,
     public readonly extra: ExtraMap = new Map(),
     public readonly timestamp: number | null = null,
+    public readonly timezoneOffsetMinutes: number | null = null,
     public readonly speed: number | null = null,
     public readonly heading: number | null = null
   ) {

@@ -19,13 +19,20 @@ const levelColors: Record<LogLevel, { bg: string; text: string }> = {
   [LogLevel.Verbose]: { bg: "#f0f0f0", text: "#555" },
 };
 
-function formatTimestamp(ms: number): string {
-  const d = new Date(ms);
+function formatTimestamp(ms: number, timezoneOffsetMinutes: number | null): string {
+  const offsetMs = (timezoneOffsetMinutes ?? 0) * 60 * 1000;
+  const d = new Date(ms + offsetMs);
   const hh = String(d.getUTCHours()).padStart(2, "0");
   const mm = String(d.getUTCMinutes()).padStart(2, "0");
   const ss = String(d.getUTCSeconds()).padStart(2, "0");
   const ms3 = String(d.getUTCMilliseconds()).padStart(3, "0");
-  return `${hh}:${mm}:${ss}.${ms3}`;
+  const time = `${hh}:${mm}:${ss}.${ms3}`;
+  if (timezoneOffsetMinutes === null) return time;
+  const sign = timezoneOffsetMinutes >= 0 ? "+" : "-";
+  const abs = Math.abs(timezoneOffsetMinutes);
+  const tzHH = String(Math.floor(abs / 60)).padStart(2, "0");
+  const tzMM = String(abs % 60).padStart(2, "0");
+  return `${time} ${sign}${tzHH}${tzMM}`;
 }
 
 function parseCoords(value: string): [number, number] | null {
@@ -63,7 +70,7 @@ export const LogPointPopup: React.FC<LogPointPopupProps> = ({ point }) => {
           {point.timestamp !== null && (
             <>
               <span style={styles.dot}>·</span>
-              <span style={styles.timestamp}>{formatTimestamp(point.timestamp)}</span>
+              <span style={styles.timestamp}>{formatTimestamp(point.timestamp, point.timezoneOffsetMinutes)}</span>
             </>
           )}
         </div>

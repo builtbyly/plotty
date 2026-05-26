@@ -5,6 +5,7 @@ export class LogcatEntry {
     public readonly pid: number,
     public readonly tid: number,
     public readonly timestamp: number,
-    public readonly message: string
+    public readonly message: string,
+    public readonly timezoneOffsetMinutes: number | null = null
   ) {}
 }
