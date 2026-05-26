@@ -26,13 +26,20 @@ export function useGistShare(layers: Layer<AnyPath>[]): { share: () => Promise<v
           files: { "plotty-session.json": { content } },
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) throw Object.assign(new Error(), { status: 401 });
+        if (res.status === 422) throw Object.assign(new Error(), { status: 422 });
+        throw Object.assign(new Error(), { status: res.status });
+      }
       const data = await res.json() as { id: string };
       const url = `${window.location.origin}${window.location.pathname}?gist=${data.id}`;
       await navigator.clipboard.writeText(url);
       toast("Link copied!");
-    } catch {
-      toast.error("Failed to share");
+    } catch (e) {
+      const status = (e as { status?: number }).status;
+      if (status === 401) toast.error("Invalid GitHub PAT — update it via the key button.");
+      else if (status === 422) toast.error("Session too large to share as a Gist.");
+      else toast.error("Failed to share — check your PAT and network.");
     } finally {
       setSharing(false);
     }
