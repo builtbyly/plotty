@@ -160,7 +160,8 @@ export class Route extends Path<RoutePoint> {
             instruction.maneuver
           )
       );
-    } catch {
+    } catch (e) {
+      console.warn("Failed to parse route instructions:", e);
       return [];
     }
   }
