@@ -49,7 +49,7 @@ const RoutePoints: React.FC<RouteComponentProps> = ({ route, color }) => {
   );
 };
 
-const RouteWaypoints: React.FC<RouteComponentProps> = ({ route }) => {
+const RouteWaypoints: React.FC<RouteComponentProps> = ({ route, color }) => {
   const stops = route.stops;
   const waypoints = stops.slice(1, -1);
   const origin = stops[0];
@@ -60,6 +60,7 @@ const RouteWaypoints: React.FC<RouteComponentProps> = ({ route }) => {
     handleGoingForward: gotoNextPoint,
     handleGoingBackward: gotoPreviousPoint,
     handlePointReady,
+    focusedPointIndex,
   } = usePointFocus(stops.length, `${route.id.toString()}_waypoints`);
 
   return (
@@ -67,14 +68,12 @@ const RouteWaypoints: React.FC<RouteComponentProps> = ({ route }) => {
       <Origin
         key={0}
         point={origin}
-        onReady={(marker) => {
-          handlePointReady(0, marker);
-        }}
+        color={color}
+        highlighted={focusedPointIndex === 0}
+        onReady={(marker) => { handlePointReady(0, marker); }}
         onRight={gotoNextPoint}
         onLeft={gotoPreviousPoint}
-        onClick={() => {
-          handlePointClick(0);
-        }}
+        onClick={() => { handlePointClick(0); }}
       />
 
       {waypoints.map((waypoint, index) => (
@@ -83,34 +82,30 @@ const RouteWaypoints: React.FC<RouteComponentProps> = ({ route }) => {
           title={`${index + 1}`}
           point={new Coordinates(waypoint.latitude, waypoint.longitude)}
           isChargingStation={waypoint.isChargingStation}
-          onReady={(marker) => {
-            handlePointReady(index + 1, marker);
-          }}
+          color={color}
+          highlighted={focusedPointIndex === index + 1}
+          onReady={(marker) => { handlePointReady(index + 1, marker); }}
           onRight={gotoNextPoint}
           onLeft={gotoPreviousPoint}
-          onClick={() => {
-            handlePointClick(index + 1);
-          }}
+          onClick={() => { handlePointClick(index + 1); }}
         />
       ))}
 
       <Destination
         key={stops.length - 1}
         point={destination}
-        onReady={(marker) => {
-          handlePointReady(stops.length - 1, marker);
-        }}
+        color={color}
+        highlighted={focusedPointIndex === stops.length - 1}
+        onReady={(marker) => { handlePointReady(stops.length - 1, marker); }}
         onRight={gotoNextPoint}
         onLeft={gotoPreviousPoint}
-        onClick={() => {
-          handlePointClick(stops.length - 1);
-        }}
+        onClick={() => { handlePointClick(stops.length - 1); }}
       />
     </>
   );
 };
 
-const RouteInstructions: React.FC<RouteComponentProps> = ({ route }) => {
+const RouteInstructions: React.FC<RouteComponentProps> = ({ route, color }) => {
   const instructions = route.instructions;
 
   const {
@@ -129,7 +124,7 @@ const RouteInstructions: React.FC<RouteComponentProps> = ({ route }) => {
             key={`${index}-${point.latitude},${point.longitude}`}
             title={text}
             point={new Coordinates(point.latitude, point.longitude)}
-            radius={12}
+            radius={8}
             content={<InstructionText instruction={i} />}
             onReady={(marker) => handlePointReady(index, marker)}
             onRight={gotoNextPoint}
@@ -137,7 +132,7 @@ const RouteInstructions: React.FC<RouteComponentProps> = ({ route }) => {
             onClick={() => {
               handlePointClick(index);
             }}
-            color={tomtomBlackColor}
+            color={color}
           />
         );
       })}
@@ -156,7 +151,7 @@ export const RouteLayer: React.FC<PathComponentProps<Route>> = React.memo(
       <LayerGroup>
         <RoutePoints {...props} />
         <RouteWaypoints {...props} />
-        <RouteInstructions {...props} color={tomtomBlackColor} />
+        <RouteInstructions {...props} />
       </LayerGroup>
     );
   }

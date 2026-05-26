@@ -1,14 +1,17 @@
+import { useMemo } from "react";
 import { Marker, Popup, useMap } from "react-leaflet";
 import PointPopup from "./PointPopup";
 import { CoordContent } from "./CoordContent";
 import L from "leaflet";
 import { Coordinates } from "../../../domain/value-objects/Coordinates";
-import { evWaypointIcon, waypointIcon } from "../../shared/icons";
+import { createStopIcon } from "../../shared/routeIcons";
 
 interface StopProps {
   title: string;
   point: Coordinates;
   isChargingStation: boolean;
+  color?: string;
+  highlighted?: boolean;
   onReady?: (marker: L.Marker | null) => void;
   onLeft?: () => void;
   onRight?: () => void;
@@ -19,12 +22,15 @@ export const Stop: React.FC<StopProps> = ({
   title,
   point,
   isChargingStation = false,
+  color = "#1a73e8",
+  highlighted = false,
   onReady = () => {},
   onLeft = () => {},
   onRight = () => {},
   onClick = () => {},
 }) => {
   const map = useMap();
+  const icon = useMemo(() => createStopIcon(color, title, highlighted), [color, title, highlighted]);
 
   return (
     <Marker
@@ -32,7 +38,7 @@ export const Stop: React.FC<StopProps> = ({
         onReady(r);
       }}
       position={[point.latitude, point.longitude]}
-      icon={isChargingStation ? evWaypointIcon : waypointIcon}
+      icon={icon}
       eventHandlers={{
         click: () => {
           onClick();

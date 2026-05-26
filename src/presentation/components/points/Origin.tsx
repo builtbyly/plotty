@@ -1,12 +1,15 @@
+import { useMemo } from "react";
 import { Marker, Popup, useMap } from "react-leaflet";
 import PointPopup from "./PointPopup";
 import { CoordContent } from "./CoordContent";
 import L from "leaflet";
 import { Coordinates } from "../../../domain/value-objects/Coordinates";
-import { originIcon } from "../../shared/icons";
+import { createOriginIcon } from "../../shared/routeIcons";
 
 interface OriginProps {
   point: Coordinates;
+  color?: string;
+  highlighted?: boolean;
   onReady?: (marker: L.Marker | null) => void;
   onClick?: () => void;
   onLeft?: () => void;
@@ -15,12 +18,15 @@ interface OriginProps {
 
 export const Origin: React.FC<OriginProps> = ({
   point,
+  color = "#1a73e8",
+  highlighted = false,
   onReady = () => {},
   onClick = () => {},
   onLeft = () => {},
   onRight = () => {},
 }) => {
   const map = useMap();
+  const icon = useMemo(() => createOriginIcon(color, highlighted), [color, highlighted]);
 
   return (
     <Marker
@@ -28,7 +34,7 @@ export const Origin: React.FC<OriginProps> = ({
         onReady(r);
       }}
       position={[point.latitude, point.longitude]}
-      icon={originIcon}
+      icon={icon}
       eventHandlers={{
         click: () => {
           onClick();
