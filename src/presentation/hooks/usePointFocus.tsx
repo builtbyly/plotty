@@ -24,9 +24,7 @@ export function usePointFocus(
   const pointCountRef = React.useRef(pointCount);
   const layerIdRef = React.useRef(layerId);
   const map = useMap();
-  const markers = React.useRef<(L.Layer | null)[]>(
-    new Array(pointCount).fill(null)
-  );
+  const markers = React.useRef<Map<number, L.Layer>>(new Map());
 
   const [focusedPointIndex, setFocusedPointIndex] = React.useState<number | null>(null);
 
@@ -37,7 +35,7 @@ export function usePointFocus(
   // Close popups and clear highlight when this layer loses focus
   React.useEffect(() => {
     if (!isLayerFocused) {
-      markers.current.forEach((marker) => marker?.closePopup());
+      markers.current.forEach((marker) => marker.closePopup());
       setFocusedPointIndex(null);
     }
   }, [isLayerFocused]);
@@ -70,9 +68,9 @@ export function usePointFocus(
   const handleGoingForward = React.useCallback(() => {
     if (!isFocusedRef.current) return;
     const index = currentIndex.current;
-    markers.current[index]?.closePopup();
+    markers.current.get(index)?.closePopup();
     const newIndex = (index + 1) % pointCountRef.current;
-    markers.current[newIndex]?.openPopup();
+    markers.current.get(newIndex)?.openPopup();
     currentIndex.current = newIndex;
     setFocusedPointIndex(newIndex);
     return newIndex;
@@ -81,9 +79,9 @@ export function usePointFocus(
   const handleGoingBackward = React.useCallback(() => {
     if (!isFocusedRef.current) return;
     const index = currentIndex.current;
-    markers.current[index]?.closePopup();
+    markers.current.get(index)?.closePopup();
     const newIndex = (index - 1 + pointCountRef.current) % pointCountRef.current;
-    markers.current[newIndex]?.openPopup();
+    markers.current.get(newIndex)?.openPopup();
     currentIndex.current = newIndex;
     setFocusedPointIndex(newIndex);
     return newIndex;
@@ -91,7 +89,8 @@ export function usePointFocus(
 
   const handlePointReady = React.useCallback(
     (index: number, marker: L.Layer | null) => {
-      markers.current[index] = marker;
+      if (marker) markers.current.set(index, marker);
+      else markers.current.delete(index);
     },
     []
   );
