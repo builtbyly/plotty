@@ -8,6 +8,7 @@ import { Button as BaseButton } from "@mui/base/Button";
 import { CssTransition } from "@mui/base/Transitions";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import AdsClickIcon from "@mui/icons-material/AdsClick";
+import ShareIcon from "@mui/icons-material/Share";
 import { tomtomSecondaryColor } from "../../../shared/colors";
 import { Z_INDEX } from "../../constants/zIndex";
 import { isTypingInInput } from "../../utils/keyboardUtils";
@@ -138,9 +139,13 @@ export function HelpPopup() {
             </div>
             <h3 style={fmtStyles.header}>Operator notes</h3>
             <div style={fmtStyles.compactList}>
-              <div>Use the layer panel to jump, rename, recolor, reorder, hide, or delete results.</div>
+              <div>Use the layer panel to jump, rename, recolor, hide, or delete results. Drag to reorder.</div>
               <div>Use <ContentCopyIcon style={{ fontSize: "1em", verticalAlign: "middle" }} /> to copy coordinates and <AdsClickIcon style={{ fontSize: "1em", verticalAlign: "middle" }} /> to pan to a point.</div>
+              <div>Right-click anywhere on the map to copy coordinates at that point.</div>
               <div>Use the lower-left tool dock for <span style={fmtStyles.emphasize}>Go To</span> and <span style={fmtStyles.emphasize}>Ruler</span>. Change the basemap in the layer panel.</div>
+              <div>Logcat layers show crash and replan markers. Use the per-layer toggles to filter by category.</div>
+              <div>Route layers show turn-by-turn instruction markers. Use the per-layer toggle to hide them.</div>
+              <div>Use <ShareIcon style={{ fontSize: "1em", verticalAlign: "middle" }} /> in the layer panel to create a shareable link of your session.</div>
             </div>
             <div style={fmtStyles.help}>
               Shortcuts: <span style={fmtStyles.emphasize}>?</span> help, <span style={fmtStyles.emphasize}>G</span> Go To, <span style={fmtStyles.emphasize}>R</span> ruler, <span style={fmtStyles.emphasize}>J/K</span> tiles, <span style={fmtStyles.emphasize}>H/L</span> point navigation.
