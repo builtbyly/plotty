@@ -18,7 +18,7 @@ interface LogcatPathLayerProps extends PathComponentProps<LogcatPath> {
 const getPointStyle = (point: LogPoint) => {
   const { point: color, category } = getLogTagColor(point.tag);
   return {
-    radius: category === "routing" ? 12 : 4,
+    radius: category === "routing" ? 12 : category === "mapMatching" ? 5 : 4,
     color,
   };
 };
