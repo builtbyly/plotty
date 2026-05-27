@@ -58,7 +58,7 @@ export const TtpPathLayer: React.FC<PathComponentProps<TtpPath>> = React.memo(({
           }}
           highlighted={index + 1 === focusedPointIndex}
           color={layer.color.toHex()}
-          radius={8}
+          radius={5}
         />
       ))}
 
