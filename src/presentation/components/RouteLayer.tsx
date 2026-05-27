@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { LayerGroup, Marker, Popup } from "react-leaflet";
+import { LayerGroup, Marker, Popup, useMap } from "react-leaflet";
 import { Point } from "./points/Point";
 import { Origin } from "./points/Origin";
 import { Stop } from "./points/Stop";
@@ -9,6 +9,7 @@ import { Coordinates } from "../../domain/value-objects/Coordinates";
 import { usePointFocus } from "../hooks/usePointFocus";
 import { PathComponentProps } from "../shared/PathComponentsProps";
 import { CoordContent } from "./points/CoordContent";
+import PointPopup from "./points/PointPopup";
 import { RouteInstruction } from "../../domain/value-objects/RouteInstruction";
 import { createInstructionIcon } from "../shared/routeIcons";
 
@@ -112,8 +113,11 @@ const InstructionMarker: React.FC<{
   highlighted: boolean;
   onReady: (m: L.Marker | null) => void;
   onClick: () => void;
-}> = ({ instruction, index, color, highlighted, onReady, onClick }) => {
+  onLeft: () => void;
+  onRight: () => void;
+}> = ({ instruction, index, color, highlighted, onReady, onClick, onLeft, onRight }) => {
   const { point } = instruction;
+  const map = useMap();
   const icon = useMemo(() => createInstructionIcon(color, index, highlighted), [color, index, highlighted]);
   return (
     <Marker
@@ -123,7 +127,14 @@ const InstructionMarker: React.FC<{
       eventHandlers={{ click: onClick }}
     >
       <Popup>
-        <InstructionText instruction={instruction} color={color} />
+        <PointPopup
+          title={`${index + 1}`}
+          content={<InstructionText instruction={instruction} color={color} />}
+          onLeftArrowClick={onLeft}
+          onRightArrowClick={onRight}
+          onLocateClick={() => map.flyTo([point.latitude, point.longitude], 18, { animate: true, duration: 0.5 })}
+          showCopyButton={false}
+        />
       </Popup>
     </Marker>
   );
@@ -134,6 +145,8 @@ const RouteInstructions: React.FC<RouteComponentProps> = ({ route, color }) => {
 
   const {
     handlePointClick,
+    handleGoingForward,
+    handleGoingBackward,
     handlePointReady,
     focusedPointIndex,
   } = usePointFocus(instructions.length, `${route.id.toString()}_instructions`);
@@ -149,6 +162,8 @@ const RouteInstructions: React.FC<RouteComponentProps> = ({ route, color }) => {
           highlighted={focusedPointIndex === index}
           onReady={(m) => handlePointReady(index, m)}
           onClick={() => handlePointClick(index)}
+          onLeft={handleGoingBackward}
+          onRight={handleGoingForward}
         />
       ))}
     </>
