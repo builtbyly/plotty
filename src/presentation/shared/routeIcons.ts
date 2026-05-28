@@ -56,6 +56,22 @@ export function createInstructionIcon(color: string, index: number, highlighted:
   });
 }
 
+export function createTrafficSectionIcon(color: string, magnitude: number): L.DivIcon {
+  const size = 18;
+  const half = size / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <circle cx="${half}" cy="${half}" r="${half - 1.5}" fill="${color}" stroke="white" stroke-width="2"/>
+  <text x="${half}" y="${half}" dominant-baseline="central" text-anchor="middle" fill="white" font-size="8" font-weight="800" font-family="system-ui,sans-serif">${magnitude}</text>
+</svg>`;
+  return L.divIcon({
+    html: `<div style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4));line-height:0;">${svg}</div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [half, half],
+    popupAnchor: [0, -half - 4],
+  });
+}
+
 export function createCrashIcon(type: "crash" | "anr"): L.DivIcon {
   const color = type === "crash" ? "#c0392b" : "#d35400";
   const glyph = type === "crash" ? "✕" : "!";

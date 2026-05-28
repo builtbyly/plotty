@@ -50,7 +50,8 @@ export interface GuidanceInstruction {
   street?: string;
   routeOffsetInMeters?: number;
   nextRoadInfo?: {
-    streetName?: string;
+    streetName?: string | { text?: string };
+    text?: string;
   };
 }
 

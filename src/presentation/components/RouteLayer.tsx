@@ -12,7 +12,7 @@ import { PathComponentProps } from "../shared/PathComponentsProps";
 import { CoordContent } from "./points/CoordContent";
 import PointPopup from "./points/PointPopup";
 import { RouteInstruction } from "../../domain/value-objects/RouteInstruction";
-import { createInstructionIcon } from "../shared/routeIcons";
+import { createInstructionIcon, createTrafficSectionIcon } from "../shared/routeIcons";
 
 interface RouteComponentProps {
   route: Route;
@@ -269,20 +269,18 @@ const RouteTrafficSections: React.FC<RouteComponentProps> = ({ route, color: _co
         const segmentPoints = points
           .slice(section.startPointIndex, section.endPointIndex + 1)
           .map((p) => [p.latitude, p.longitude] as [number, number]);
-        const midIndex = Math.floor((section.startPointIndex + section.endPointIndex) / 2);
-        const midPoint = points[midIndex];
+        const midPoint = points[section.startPointIndex];
         const sectionColor = trafficSectionColor(section.simpleCategory);
 
         return (
           <React.Fragment key={`traffic-${index}-${section.startPointIndex}-${section.endPointIndex}`}>
             {segmentPoints.length >= 2 && (
-              <Polyline positions={segmentPoints} color={sectionColor} weight={6} />
+              <Polyline positions={segmentPoints} color={sectionColor} weight={6} opacity={0.5} />
             )}
             {midPoint && (
-              <CircleMarker
-                center={[midPoint.latitude, midPoint.longitude]}
-                radius={8}
-                pathOptions={{ color: sectionColor, fillColor: sectionColor, fillOpacity: 0.85 }}
+              <Marker
+                position={[midPoint.latitude, midPoint.longitude]}
+                icon={createTrafficSectionIcon(sectionColor, section.magnitudeOfDelay)}
               >
                 <Popup>
                   <div style={trafficPopupStyles.root}>
@@ -299,7 +297,7 @@ const RouteTrafficSections: React.FC<RouteComponentProps> = ({ route, color: _co
                     )}
                   </div>
                 </Popup>
-              </CircleMarker>
+              </Marker>
             )}
           </React.Fragment>
         );

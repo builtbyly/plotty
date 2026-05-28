@@ -203,10 +203,13 @@ export const LayerPanel = <T extends AnyPath>({
                 />
                 {layer.path instanceof Route && (
                   <div style={styles.routeSummary}>
-                    <span>{((layer.path as unknown as Route).summary.lengthInMeters / 1000).toFixed(1)} km · {Math.floor((layer.path as unknown as Route).summary.travelTimeInSeconds / 60)}m {(layer.path as unknown as Route).summary.travelTimeInSeconds % 60}s</span>
-                    {(layer.path as unknown as Route).summary.trafficDelayInSeconds > 0 && (
-                      <span style={styles.routeSummaryDelay}>delay {(layer.path as unknown as Route).summary.trafficDelayInSeconds}s</span>
-                    )}
+                    {(() => {
+                      const r = layer.path as unknown as Route;
+                      const dist = (r.summary.lengthInMeters / 1000).toFixed(1);
+                      const time = `${Math.floor(r.summary.travelTimeInSeconds / 60)}m ${r.summary.travelTimeInSeconds % 60}s`;
+                      const delay = r.summary.trafficDelayInSeconds > 0 ? ` · delay ${r.summary.trafficDelayInSeconds}s` : "";
+                      return <span>{dist} km · {time}{delay && <span style={styles.routeSummaryDelay}>{delay}</span>}</span>;
+                    })()}
                   </div>
                 )}
                 {layer.path instanceof LogcatPath && layer.path.replanEvents.length > 0 && onReplanToggle && (
@@ -376,8 +379,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: "rgba(0,0,0,0.42)",
   },
   routeSummary: {
-    display: "flex",
-    flexDirection: "column" as const,
     padding: "2px 10px 4px 14px",
     borderBottom: "1px solid rgba(0,0,0,0.06)",
     borderLeft: "2px solid rgba(0,0,0,0.07)",
@@ -385,7 +386,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: "0.67rem",
     color: "rgba(0,0,0,0.42)",
     fontFamily: "'Roboto', sans-serif",
-    gap: "1px",
   },
   routeSummaryDelay: {
     fontSize: "0.65rem",
@@ -410,6 +410,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: "'Roboto', sans-serif",
     marginRight: "6px",
     flexShrink: 0,
+    minWidth: "80px",
   },
   patSection: {
     width: "100%",

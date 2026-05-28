@@ -206,6 +206,16 @@ export class Route extends Path<RoutePoint> {
     return map;
   }
 
+  private static toStr(val: unknown): string | undefined {
+    if (val === undefined || val === null) return undefined;
+    if (typeof val === "string") return val || undefined;
+    if (typeof val === "object" && "text" in (val as object)) {
+      const text = (val as Record<string, unknown>).text;
+      return typeof text === "string" ? text || undefined : undefined;
+    }
+    return undefined;
+  }
+
   private instructionsFromSource(source: RouteSource): RouteInstruction[] {
     try {
       const result: RouteInstruction[] = [];
@@ -213,11 +223,14 @@ export class Route extends Path<RoutePoint> {
         const isNewSchema = instruction.maneuverPoint !== undefined;
         if (isNewSchema) {
           const pt = instruction.maneuverPoint!;
+          const streetName =
+            Route.toStr(instruction.nextRoadInfo?.streetName) ??
+            Route.toStr(instruction.nextRoadInfo?.text);
           result.push(
             new RouteInstruction(
               new Coordinates(pt.latitude, pt.longitude),
-              instruction.maneuver ?? "",
-              instruction.nextRoadInfo?.streetName,
+              Route.toStr(instruction.maneuver) ?? "",
+              streetName,
               instruction.routeOffsetInMeters,
             )
           );
@@ -227,8 +240,8 @@ export class Route extends Path<RoutePoint> {
           result.push(
             new RouteInstruction(
               new Coordinates(pt.latitude, pt.longitude),
-              instruction.instructionType ?? instruction.message ?? "",
-              instruction.street,
+              Route.toStr(instruction.instructionType) ?? Route.toStr(instruction.message) ?? "",
+              Route.toStr(instruction.street),
               instruction.routeOffsetInMeters,
             )
           );
