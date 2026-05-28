@@ -9,6 +9,8 @@ import { Coordinates } from "./Coordinates";
 export class RouteInstruction {
   constructor(
     public readonly point: Coordinates,
-    public readonly instruction: string
+    public readonly instruction: string,
+    public readonly streetName?: string,
+    public readonly routeOffsetInMeters?: number,
   ) {}
 }

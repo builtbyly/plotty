@@ -150,16 +150,33 @@ export class Route extends Path<RoutePoint> {
 
   private instructionsFromSource(source: RouteSource): RouteInstruction[] {
     try {
-      return source.guidance.instructions.map(
-        (instruction) =>
-          new RouteInstruction(
-            new Coordinates(
-              instruction.maneuverPoint.latitude,
-              instruction.maneuverPoint.longitude
-            ),
-            instruction.maneuver
-          )
-      );
+      const result: RouteInstruction[] = [];
+      for (const instruction of source.guidance.instructions) {
+        const isNewSchema = instruction.maneuverPoint !== undefined;
+        if (isNewSchema) {
+          const pt = instruction.maneuverPoint!;
+          result.push(
+            new RouteInstruction(
+              new Coordinates(pt.latitude, pt.longitude),
+              instruction.maneuver ?? "",
+              instruction.nextRoadInfo?.streetName,
+              instruction.routeOffsetInMeters,
+            )
+          );
+        } else {
+          const pt = instruction.point;
+          if (!pt) continue;
+          result.push(
+            new RouteInstruction(
+              new Coordinates(pt.latitude, pt.longitude),
+              instruction.instructionType ?? instruction.message ?? "",
+              instruction.street,
+              instruction.routeOffsetInMeters,
+            )
+          );
+        }
+      }
+      return result;
     } catch (e) {
       console.warn("Failed to parse route instructions:", e);
       return [];

@@ -28,14 +28,24 @@ export interface Summary {
   chargingInformationAtEndOfLeg?: Record<string, unknown>;
 }
 
-interface GuidanceInstruction {
+export interface GuidanceInstruction {
   drivingSide: string;
-  maneuver: string;
-  maneuverPoint: {
+  maneuver?: string;
+  maneuverPoint?: {
     latitude: number;
     longitude: number;
   };
-  routeOffsetInMeters: number;
+  point?: {
+    latitude: number;
+    longitude: number;
+  };
+  instructionType?: string;
+  message?: string;
+  street?: string;
+  routeOffsetInMeters?: number;
+  nextRoadInfo?: {
+    streetName?: string;
+  };
 }
 
 interface Progress {

@@ -192,10 +192,12 @@ export const RouteLayer: React.FC<RouteLayerProps> = React.memo(
 );
 
 function InstructionText({ instruction, color }: { instruction: RouteInstruction; color: string }) {
-  const { point, instruction: text } = instruction;
+  const { point, instruction: text, streetName, routeOffsetInMeters } = instruction;
   return (
     <div style={styles.root}>
       <div style={{ ...styles.maneuver, borderTopColor: color }}>{text}</div>
+      {streetName && <div style={styles.detail}>onto {streetName}</div>}
+      {routeOffsetInMeters !== undefined && <div style={styles.detail}>at {routeOffsetInMeters}m</div>}
       <div style={styles.divider} />
       <CoordContent lat={point.latitude} lng={point.longitude} accentColor={color} />
     </div>
@@ -219,5 +221,9 @@ const styles: { [key: string]: React.CSSProperties } = {
   divider: {
     height: "1px",
     background: "rgba(0,0,0,0.07)",
+  },
+  detail: {
+    fontSize: "0.78rem",
+    color: "rgba(0,0,0,0.55)",
   },
 };
