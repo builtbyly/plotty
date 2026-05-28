@@ -19,6 +19,20 @@ interface RouteComponentProps {
   color: string;
 }
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s`;
+}
+
+function CheckpointContent({ travelTimeInSeconds, distanceInMeters }: { travelTimeInSeconds: number; distanceInMeters: number }) {
+  return (
+    <div style={{ marginTop: "6px", borderTop: "1px solid rgba(0,0,0,0.15)", paddingTop: "6px", fontSize: "0.80rem", color: "rgba(0,0,0,0.65)" }}>
+      {`⏱ ${formatTime(travelTimeInSeconds)} · ${distanceInMeters}m`}
+    </div>
+  );
+}
+
 const RoutePoints: React.FC<RouteComponentProps> = ({ route, color }) => {
   const points = route.points;
   const legMembership = route.legMembership;
@@ -49,11 +63,22 @@ const RoutePoints: React.FC<RouteComponentProps> = ({ route, color }) => {
       {points.map((point, index) => {
         const legIdx = legMembership[index] ?? 0;
         const idxInLeg = legCounters[index];
+        const checkpoint = route.progress.get(index);
+        const content = checkpoint ? (
+          <>
+            <CoordContent lat={point.latitude} lng={point.longitude} accentColor={color} />
+            <CheckpointContent
+              travelTimeInSeconds={checkpoint.travelTimeInSeconds}
+              distanceInMeters={checkpoint.distanceInMeters}
+            />
+          </>
+        ) : undefined;
         return (
           <Point
             key={`${index}-${point.latitude},${point.longitude}`}
             title={`#${index} · leg ${legIdx}[${idxInLeg}]`}
             point={point}
+            content={content}
             highlighted={index === focusedPointIndex}
             onReady={(marker) => handlePointReady(index, marker)}
             onRight={gotoNextPoint}

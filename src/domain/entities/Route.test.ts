@@ -155,27 +155,19 @@ describe("Route", () => {
   });
 
   it("names a route without deviationTime as 'Route N'", () => {
-    const route = new Route(makeSource());
-    expect(route.getName()).toBe("Route 1");
+    expect(new Route(makeSource()).getName()).toBe("Route 1");
   });
 
   it("names a route with deviationTime as 'Route N [alt +Xs]'", () => {
-    const source = makeSource({ summary: { ...summary, deviationTime: 128 } });
-    const route = new Route(source);
-    expect(route.getName()).toBe("Route 1 [alt +128s]");
+    expect(new Route(makeSource({ summary: { ...summary, deviationTime: 128 } })).getName()).toBe("Route 1 [alt +128s]");
   });
 
   it("rounds deviationTime in the route name", () => {
-    const source = makeSource({ summary: { ...summary, deviationTime: 79.6 } });
-    const route = new Route(source);
-    expect(route.getName()).toBe("Route 1 [alt +80s]");
+    expect(new Route(makeSource({ summary: { ...summary, deviationTime: 79.6 } })).getName()).toBe("Route 1 [alt +80s]");
   });
 
   it("extracts deviationPoint from summary when present", () => {
-    const source = makeSource({
-      summary: { ...summary, deviationTime: 79, deviationDistance: 132, deviationPoint: { latitude: 48.131, longitude: 11.589 } },
-    });
-    const route = new Route(source);
+    const route = new Route(makeSource({ summary: { ...summary, deviationTime: 79, deviationDistance: 132, deviationPoint: { latitude: 48.131, longitude: 11.589 } } }));
     expect(route.deviationPoint?.latitude).toBe(48.131);
     expect(route.deviationPoint?.longitude).toBe(11.589);
   });
@@ -195,8 +187,7 @@ describe("Route", () => {
       progress: [],
       sections: [],
     };
-    const route = new Route(source);
-    expect(route.legMembership).toEqual([0, 0, 0, 1, 1]);
+    expect(new Route(source).legMembership).toEqual([0, 0, 0, 1, 1]);
   });
 
   describe("trafficSections", () => {
@@ -209,18 +200,16 @@ describe("Route", () => {
     });
 
     it("parses TRAFFIC sections correctly", () => {
-      const source = twoPointSource([{ sectionType: "TRAFFIC", simpleCategory: "JAM", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 120, effectiveSpeedInKmh: 15, magnitudeOfDelay: 3, tec: { effectCode: 5, causes: [{ mainCauseCode: 1 }] } }]);
-      const route = new Route(source);
+      const route = new Route(twoPointSource([{ sectionType: "TRAFFIC", simpleCategory: "JAM", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 120, effectiveSpeedInKmh: 15, magnitudeOfDelay: 3, tec: { effectCode: 5, causes: [{ mainCauseCode: 1 }] } }]));
       expect(route.trafficSections).toHaveLength(1);
       expect(route.trafficSections[0]).toMatchObject({ sectionType: "TRAFFIC", simpleCategory: "JAM", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 120, effectiveSpeedInKmh: 15, magnitudeOfDelay: 3, eventId: "5" });
     });
 
     it("filters out non-TRAFFIC sections", () => {
-      const source = twoPointSource([
+      const route = new Route(twoPointSource([
         { sectionType: "TRAVEL_MODE", simpleCategory: "CAR", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 0, effectiveSpeedInKmh: 80, magnitudeOfDelay: 0, tec: { effectCode: 0, causes: [] } },
         { sectionType: "TRAFFIC", simpleCategory: "ROAD_WORK", startPointIndex: 1, endPointIndex: 2, delayInSeconds: 60, effectiveSpeedInKmh: 20, magnitudeOfDelay: 2, tec: { effectCode: 0, causes: [] } },
-      ]);
-      const route = new Route(source);
+      ]));
       expect(route.trafficSections).toHaveLength(1);
       expect(route.trafficSections[0].simpleCategory).toBe("ROAD_WORK");
     });
@@ -228,5 +217,17 @@ describe("Route", () => {
     it("returns empty array when sections is empty", () => {
       expect(new Route(twoPointSource([])).trafficSections).toEqual([]);
     });
+  });
+
+  it("builds progress map keyed by pointIndex", () => {
+    const source = makeSource({ progress: [{ pointIndex: 0, travelTimeInSeconds: 0, distanceInMeters: 0 }, { pointIndex: 1, travelTimeInSeconds: 69, distanceInMeters: 252 }] });
+    const route = new Route(source);
+    expect(route.progress.size).toBe(2);
+    expect(route.progress.get(0)).toEqual({ travelTimeInSeconds: 0, distanceInMeters: 0 });
+    expect(route.progress.get(1)).toEqual({ travelTimeInSeconds: 69, distanceInMeters: 252 });
+  });
+
+  it("builds empty progress map when progress array is empty", () => {
+    expect(new Route(makeSource()).progress.size).toBe(0);
   });
 });

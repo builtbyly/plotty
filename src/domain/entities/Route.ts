@@ -29,6 +29,7 @@ export class Route extends Path<RoutePoint> {
   readonly summary: Summary;
   readonly deviationPoint?: Coordinates;
   readonly legMembership: number[];
+  readonly progress: Map<number, { travelTimeInSeconds: number; distanceInMeters: number }>;
 
   constructor(source: RouteSource) {
     const count = ++Route.counter;
@@ -47,6 +48,7 @@ export class Route extends Path<RoutePoint> {
     this.deviationPoint = source.summary.deviationPoint
       ? new Coordinates(source.summary.deviationPoint.latitude, source.summary.deviationPoint.longitude)
       : undefined;
+    this.progress = this.progressFromSource(source);
   }
 
   private buildLegMembership(legs: RouteLeg[]): number[] {
@@ -191,6 +193,17 @@ export class Route extends Path<RoutePoint> {
       console.warn("Failed to parse traffic sections:", e);
       return [];
     }
+  }
+
+  private progressFromSource(source: RouteSource): Map<number, { travelTimeInSeconds: number; distanceInMeters: number }> {
+    const map = new Map<number, { travelTimeInSeconds: number; distanceInMeters: number }>();
+    for (const entry of source.progress) {
+      map.set(entry.pointIndex, {
+        travelTimeInSeconds: entry.travelTimeInSeconds,
+        distanceInMeters: entry.distanceInMeters,
+      });
+    }
+    return map;
   }
 
   private instructionsFromSource(source: RouteSource): RouteInstruction[] {
