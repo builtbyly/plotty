@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { Route } from "./Route";
 import { RouteSource } from "../value-objects/RoutingModel";
 
@@ -25,6 +25,30 @@ const minimalSource = (instructions: object[]): RouteSource => ({
   guidance: { instructions: instructions as RouteSource["guidance"]["instructions"] },
   progress: [],
   sections: [],
+});
+
+function makeSource(overrides: Partial<RouteSource> = {}): RouteSource {
+  return {
+    legs: [
+      {
+        points: [
+          { latitude: 10, longitude: 10 },
+          { latitude: 20, longitude: 20 },
+        ],
+        summary,
+      },
+    ],
+    summary,
+    guidance: { instructions: [] },
+    progress: [],
+    sections: [],
+    ...overrides,
+  };
+}
+
+// Reset the static counter before each test so naming is deterministic
+beforeEach(() => {
+  (Route as unknown as { counter: number }).counter = 0;
 });
 
 describe("Route", () => {
@@ -128,5 +152,77 @@ describe("Route", () => {
     const route = new Route(source);
 
     expect(route.stops.map((stop) => stop.index)).toEqual([0, 1, 2, 3]);
+  });
+
+  it("names a route without deviationTime as 'Route N'", () => {
+    const route = new Route(makeSource());
+    expect(route.getName()).toBe("Route 1");
+  });
+
+  it("names a route with deviationTime as 'Route N [alt +Xs]'", () => {
+    const source = makeSource({
+      summary: { ...summary, deviationTime: 128 },
+    });
+    const route = new Route(source);
+    expect(route.getName()).toBe("Route 1 [alt +128s]");
+  });
+
+  it("rounds deviationTime in the route name", () => {
+    const source = makeSource({
+      summary: { ...summary, deviationTime: 79.6 },
+    });
+    const route = new Route(source);
+    expect(route.getName()).toBe("Route 1 [alt +80s]");
+  });
+
+  it("extracts deviationPoint from summary when present", () => {
+    const source = makeSource({
+      summary: {
+        ...summary,
+        deviationTime: 79,
+        deviationDistance: 132,
+        deviationPoint: { latitude: 48.131, longitude: 11.589 },
+      },
+    });
+    const route = new Route(source);
+    expect(route.deviationPoint).toBeDefined();
+    expect(route.deviationPoint?.latitude).toBe(48.131);
+    expect(route.deviationPoint?.longitude).toBe(11.589);
+  });
+
+  it("has no deviationPoint when summary.deviationPoint is absent", () => {
+    const route = new Route(makeSource());
+    expect(route.deviationPoint).toBeUndefined();
+  });
+
+  it("builds legMembership correctly for a 2-leg route", () => {
+    const source: RouteSource = {
+      legs: [
+        {
+          points: [
+            { latitude: 10, longitude: 10 },
+            { latitude: 20, longitude: 20 },
+            { latitude: 30, longitude: 30 },
+          ],
+          summary,
+        },
+        {
+          points: [
+            { latitude: 30, longitude: 30 },
+            { latitude: 40, longitude: 40 },
+            { latitude: 50, longitude: 50 },
+          ],
+          summary,
+        },
+      ],
+      summary,
+      guidance: { instructions: [] },
+      progress: [],
+      sections: [],
+    };
+
+    const route = new Route(source);
+    // leg 0: indices 0,1,2 (3 points), leg 1: indices 3,4 (2 points, first shared one dropped)
+    expect(route.legMembership).toEqual([0, 0, 0, 1, 1]);
   });
 });

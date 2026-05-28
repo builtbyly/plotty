@@ -1,7 +1,7 @@
 import { dropFirst, last, dropLast, first } from "../../shared/array-utils";
 import { GooglePolylineEncodingUtil } from "../utils/encoding-utils";
 import { Path } from "./Path";
-import { RouteSource } from "../value-objects/RoutingModel";
+import { RouteSource, Summary } from "../value-objects/RoutingModel";
 import { Coordinates } from "../value-objects/Coordinates";
 import { RoutePoint } from "../value-objects/RoutePoint";
 import { RouteLeg } from "../value-objects/RouteLeg";
@@ -25,14 +25,37 @@ export class Route extends Path<RoutePoint> {
   stops: RouteStop[];
   instructions: RouteInstruction[];
   readonly source: RouteSource;
+  readonly summary: Summary;
+  readonly deviationPoint?: Coordinates;
+  readonly legMembership: number[];
 
   constructor(source: RouteSource) {
-    super([], `Route ${++Route.counter}`);
+    const count = ++Route.counter;
+    const name = source.summary.deviationTime !== undefined
+      ? `Route ${count} [alt +${Math.round(source.summary.deviationTime)}s]`
+      : `Route ${count}`;
+    super([], name);
     this.legs = this.legsFromSource(source);
     this.points = this.toRoutePoints(this.pointsFromLegs(this.legs));
+    this.legMembership = this.buildLegMembership(this.legs);
     this.stops = this.stopsFromPath(this);
     this.instructions = this.instructionsFromSource(source);
     this.source = source;
+    this.summary = source.summary;
+    this.deviationPoint = source.summary.deviationPoint
+      ? new Coordinates(source.summary.deviationPoint.latitude, source.summary.deviationPoint.longitude)
+      : undefined;
+  }
+
+  private buildLegMembership(legs: RouteLeg[]): number[] {
+    const membership: number[] = [];
+    legs.forEach((leg, legIndex) => {
+      const pointsToAdd = legIndex === 0 ? leg.points.length : leg.points.length - 1;
+      for (let i = 0; i < pointsToAdd; i++) {
+        membership.push(legIndex);
+      }
+    });
+    return membership;
   }
 
   private legsFromSource(source: RouteSource): RouteLeg[] {

@@ -26,6 +26,12 @@ export interface Summary {
   remainingChargeAtArrivalInkWh?: number;
   totalChargingTimeInSeconds?: number;
   chargingInformationAtEndOfLeg?: Record<string, unknown>;
+  deviationTime?: number;
+  deviationDistance?: number;
+  deviationPoint?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface GuidanceInstruction {

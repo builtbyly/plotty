@@ -197,6 +197,14 @@ export const LayerPanel = <T extends AnyPath>({
                   onMoveDown={i < layers.length - 1 ? () => onReorder(i, i + 1) : undefined}
                   showColorPicker={!(layer.path instanceof LogcatPath)}
                 />
+                {layer.path instanceof Route && (
+                  <div style={styles.routeSummary}>
+                    <span>{((layer.path as unknown as Route).summary.lengthInMeters / 1000).toFixed(1)} km · {Math.floor((layer.path as unknown as Route).summary.travelTimeInSeconds / 60)}m {(layer.path as unknown as Route).summary.travelTimeInSeconds % 60}s</span>
+                    {(layer.path as unknown as Route).summary.trafficDelayInSeconds > 0 && (
+                      <span style={styles.routeSummaryDelay}>delay {(layer.path as unknown as Route).summary.trafficDelayInSeconds}s</span>
+                    )}
+                  </div>
+                )}
                 {layer.path instanceof LogcatPath && layer.path.replanEvents.length > 0 && onReplanToggle && (
                   <div style={styles.replanToggles}>
                     <span style={styles.replanKicker}>Replans</span>
@@ -345,6 +353,22 @@ const styles: { [key: string]: React.CSSProperties } = {
     letterSpacing: "0.1em",
     textTransform: "uppercase" as const,
     color: "rgba(0,0,0,0.42)",
+  },
+  routeSummary: {
+    display: "flex",
+    flexDirection: "column" as const,
+    padding: "2px 10px 4px 14px",
+    borderBottom: "1px solid rgba(0,0,0,0.06)",
+    borderLeft: "2px solid rgba(0,0,0,0.07)",
+    marginLeft: "12px",
+    fontSize: "0.67rem",
+    color: "rgba(0,0,0,0.42)",
+    fontFamily: "'Roboto', sans-serif",
+    gap: "1px",
+  },
+  routeSummaryDelay: {
+    fontSize: "0.65rem",
+    color: "rgba(180,60,0,0.65)",
   },
   replanToggles: {
     display: "flex",

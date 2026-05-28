@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { LayerGroup, Marker, Popup, useMap } from "react-leaflet";
+import { CircleMarker, LayerGroup, Marker, Popup, useMap } from "react-leaflet";
 import { Point } from "./points/Point";
 import { Origin } from "./points/Origin";
 import { Stop } from "./points/Stop";
@@ -20,6 +20,7 @@ interface RouteComponentProps {
 
 const RoutePoints: React.FC<RouteComponentProps> = ({ route, color }) => {
   const points = route.points;
+  const legMembership = route.legMembership;
 
   const {
     handlePointClick,
@@ -29,23 +30,40 @@ const RoutePoints: React.FC<RouteComponentProps> = ({ route, color }) => {
     focusedPointIndex,
   } = usePointFocus(points.length, `${route.id.toString()}_points`);
 
+  // Precompute per-leg counters for index-within-leg
+  const legCounters = useMemo(() => {
+    const counters: number[] = new Array(points.length).fill(0);
+    const legRunningCounts: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+      const legIdx = legMembership[i] ?? 0;
+      if (legRunningCounts[legIdx] === undefined) legRunningCounts[legIdx] = 0;
+      counters[i] = legRunningCounts[legIdx];
+      legRunningCounts[legIdx]++;
+    }
+    return counters;
+  }, [points.length, legMembership]);
+
   return (
     <>
-      {points.map((point, index) => (
-        <Point
-          key={`${index}-${point.latitude},${point.longitude}`}
-          title={`${index}`}
-          point={point}
-          highlighted={index === focusedPointIndex}
-          onReady={(marker) => handlePointReady(index, marker)}
-          onRight={gotoNextPoint}
-          onLeft={gotoPreviousPoint}
-          onClick={() => {
-            handlePointClick(index);
-          }}
-          color={color}
-        />
-      ))}
+      {points.map((point, index) => {
+        const legIdx = legMembership[index] ?? 0;
+        const idxInLeg = legCounters[index];
+        return (
+          <Point
+            key={`${index}-${point.latitude},${point.longitude}`}
+            title={`#${index} · leg ${legIdx}[${idxInLeg}]`}
+            point={point}
+            highlighted={index === focusedPointIndex}
+            onReady={(marker) => handlePointReady(index, marker)}
+            onRight={gotoNextPoint}
+            onLeft={gotoPreviousPoint}
+            onClick={() => {
+              handlePointClick(index);
+            }}
+            color={color}
+          />
+        );
+      })}
     </>
   );
 };
@@ -170,6 +188,45 @@ const RouteInstructions: React.FC<RouteComponentProps> = ({ route, color }) => {
   );
 };
 
+const DeviationMarker: React.FC<RouteComponentProps> = ({ route, color }) => {
+  const { deviationPoint, summary } = route;
+  const map = useMap();
+
+  if (!deviationPoint) return null;
+
+  const { deviationTime, deviationDistance } = summary;
+
+  return (
+    <CircleMarker
+      center={[deviationPoint.latitude, deviationPoint.longitude]}
+      radius={8}
+      pathOptions={{ color, fillColor: color, fillOpacity: 0.8, weight: 2 }}
+    >
+      <Popup>
+        <PointPopup
+          title="deviation"
+          content={
+            <div style={deviationStyles.root}>
+              <div style={{ ...deviationStyles.label, borderTopColor: color }}>deviation point</div>
+              {deviationTime !== undefined && deviationDistance !== undefined && (
+                <div style={deviationStyles.stats}>
+                  +{Math.round(deviationTime)}s · +{Math.round(deviationDistance)}m from main
+                </div>
+              )}
+              <div style={deviationStyles.divider} />
+              <CoordContent lat={deviationPoint.latitude} lng={deviationPoint.longitude} accentColor={color} />
+            </div>
+          }
+          onLocateClick={() => map.flyTo([deviationPoint.latitude, deviationPoint.longitude], 18, { animate: true, duration: 0.5 })}
+          onLeftArrowClick={() => {}}
+          onRightArrowClick={() => {}}
+          showCopyButton={false}
+        />
+      </Popup>
+    </CircleMarker>
+  );
+};
+
 interface RouteLayerProps extends PathComponentProps<Route> {
   showInstructions?: boolean;
 }
@@ -186,6 +243,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = React.memo(
         <RoutePoints {...props} />
         <RouteWaypoints {...props} />
         {showInstructions && <RouteInstructions {...props} />}
+        <DeviationMarker {...props} />
       </LayerGroup>
     );
   }
@@ -225,5 +283,29 @@ const styles: { [key: string]: React.CSSProperties } = {
   detail: {
     fontSize: "0.78rem",
     color: "rgba(0,0,0,0.55)",
+  },
+};
+
+const deviationStyles: { [key: string]: React.CSSProperties } = {
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    minWidth: "200px",
+    gap: "6px",
+  },
+  label: {
+    fontSize: "0.82rem",
+    fontWeight: 600,
+    color: "rgba(0,0,0,0.75)",
+    borderTop: "3px solid",
+    paddingTop: "8px",
+  },
+  stats: {
+    fontSize: "0.75rem",
+    color: "rgba(0,0,0,0.55)",
+  },
+  divider: {
+    height: "1px",
+    background: "rgba(0,0,0,0.07)",
   },
 };
