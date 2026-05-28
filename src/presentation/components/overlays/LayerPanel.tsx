@@ -33,6 +33,8 @@ interface LayerPanelProps<T extends AnyPath> {
   onReplanToggle?: (layerId: string, category: "behavioral" | "interval", value: boolean) => void;
   instructionToggles?: Record<string, boolean>;
   onInstructionToggle?: (layerId: string, value: boolean) => void;
+  trafficToggles?: Record<string, boolean>;
+  onTrafficToggle?: (layerId: string, value: boolean) => void;
 }
 
 export const LayerPanel = <T extends AnyPath>({
@@ -50,6 +52,8 @@ export const LayerPanel = <T extends AnyPath>({
   onReplanToggle,
   instructionToggles = {},
   onInstructionToggle,
+  trafficToggles = {},
+  onTrafficToggle,
 }: LayerPanelProps<T>) => {
   const [isScrollable, setIsScrollable] = React.useState(false);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -241,6 +245,23 @@ export const LayerPanel = <T extends AnyPath>({
                           sx={replanCheckboxSx}
                           checked={instructionToggles[layer.id] ?? true}
                           onChange={(e) => onInstructionToggle!(layer.id, e.target.checked)}
+                        />
+                      }
+                    />
+                  </div>
+                )}
+                {layer.path instanceof Route && layer.path.trafficSections.length > 0 && onTrafficToggle && (
+                  <div style={styles.replanToggles}>
+                    <span style={styles.replanKicker}>Traffic</span>
+                    <FormControlLabel
+                      sx={replanLabelSx}
+                      label={`show (${(layer.path as unknown as Route).trafficSections.length})`}
+                      control={
+                        <Checkbox
+                          size="small"
+                          sx={replanCheckboxSx}
+                          checked={trafficToggles[layer.id] ?? true}
+                          onChange={(e) => onTrafficToggle!(layer.id, e.target.checked)}
                         />
                       }
                     />

@@ -68,10 +68,21 @@ interface Section {
   sectionType: string;
   simpleCategory: string;
   startPointIndex: number;
-  tec: {
+  tec?: {
     effectCode: number;
     causes: {
       mainCauseCode: number;
     }[];
   };
+}
+
+export interface TrafficSection {
+  sectionType: string;
+  simpleCategory: string;
+  startPointIndex: number;
+  endPointIndex: number;
+  delayInSeconds: number;
+  effectiveSpeedInKmh: number;
+  magnitudeOfDelay: number;
+  eventId?: string;
 }

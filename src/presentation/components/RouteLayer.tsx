@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { CircleMarker, LayerGroup, Marker, Popup, useMap } from "react-leaflet";
+import { CircleMarker, LayerGroup, Marker, Polyline, Popup, useMap } from "react-leaflet";
+import { TrafficSection } from "../../domain/value-objects/RoutingModel";
 import { Point } from "./points/Point";
 import { Origin } from "./points/Origin";
 import { Stop } from "./points/Stop";
@@ -227,12 +228,68 @@ const DeviationMarker: React.FC<RouteComponentProps> = ({ route, color }) => {
   );
 };
 
+function trafficSectionColor(simpleCategory: string): string {
+  if (simpleCategory === "JAM") return "#FF8C00";
+  if (simpleCategory === "ROAD_WORK") return "#CC0000";
+  return "#FF6600";
+}
+
+const RouteTrafficSections: React.FC<RouteComponentProps> = ({ route, color: _color }) => {
+  const sections = route.trafficSections;
+  const points = route.points;
+
+  return (
+    <>
+      {sections.map((section: TrafficSection, index: number) => {
+        const segmentPoints = points
+          .slice(section.startPointIndex, section.endPointIndex + 1)
+          .map((p) => [p.latitude, p.longitude] as [number, number]);
+        const midIndex = Math.floor((section.startPointIndex + section.endPointIndex) / 2);
+        const midPoint = points[midIndex];
+        const sectionColor = trafficSectionColor(section.simpleCategory);
+
+        return (
+          <React.Fragment key={`traffic-${index}-${section.startPointIndex}-${section.endPointIndex}`}>
+            {segmentPoints.length >= 2 && (
+              <Polyline positions={segmentPoints} color={sectionColor} weight={6} />
+            )}
+            {midPoint && (
+              <CircleMarker
+                center={[midPoint.latitude, midPoint.longitude]}
+                radius={8}
+                pathOptions={{ color: sectionColor, fillColor: sectionColor, fillOpacity: 0.85 }}
+              >
+                <Popup>
+                  <div style={trafficPopupStyles.root}>
+                    <div style={{ ...trafficPopupStyles.category, borderTopColor: sectionColor }}>
+                      {section.simpleCategory}
+                    </div>
+                    <div style={trafficPopupStyles.row}>
+                      delay: {section.delayInSeconds}s · speed: {section.effectiveSpeedInKmh} km/h
+                    </div>
+                    <div style={trafficPopupStyles.row}>magnitude: {section.magnitudeOfDelay}</div>
+                    <div style={trafficPopupStyles.row}>pts {section.startPointIndex} → {section.endPointIndex}</div>
+                    {section.eventId && (
+                      <div style={trafficPopupStyles.row}>eventId: {section.eventId}</div>
+                    )}
+                  </div>
+                </Popup>
+              </CircleMarker>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
+};
+
 interface RouteLayerProps extends PathComponentProps<Route> {
   showInstructions?: boolean;
+  showTrafficSections?: boolean;
 }
 
 export const RouteLayer: React.FC<RouteLayerProps> = React.memo(
-  ({ layer, showInstructions = true }) => {
+  ({ layer, showInstructions = true, showTrafficSections = true }) => {
     const props: RouteComponentProps = {
       route: layer.path,
       color: layer.color.toHex(),
@@ -244,6 +301,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = React.memo(
         <RouteWaypoints {...props} />
         {showInstructions && <RouteInstructions {...props} />}
         <DeviationMarker {...props} />
+        {showTrafficSections && <RouteTrafficSections {...props} />}
       </LayerGroup>
     );
   }
@@ -307,5 +365,26 @@ const deviationStyles: { [key: string]: React.CSSProperties } = {
   divider: {
     height: "1px",
     background: "rgba(0,0,0,0.07)",
+  },
+};
+
+const trafficPopupStyles: { [key: string]: React.CSSProperties } = {
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    minWidth: "160px",
+    gap: "4px",
+  },
+  category: {
+    fontSize: "0.82rem",
+    fontWeight: 700,
+    color: "rgba(0,0,0,0.75)",
+    borderTop: "3px solid",
+    paddingTop: "6px",
+    textTransform: "uppercase",
+  },
+  row: {
+    fontSize: "0.75rem",
+    color: "rgba(0,0,0,0.6)",
   },
 };

@@ -1,7 +1,7 @@
 import { dropFirst, last, dropLast, first } from "../../shared/array-utils";
 import { GooglePolylineEncodingUtil } from "../utils/encoding-utils";
 import { Path } from "./Path";
-import { RouteSource, Summary } from "../value-objects/RoutingModel";
+import { RouteSource, Summary, TrafficSection } from "../value-objects/RoutingModel";
 import { Coordinates } from "../value-objects/Coordinates";
 import { RoutePoint } from "../value-objects/RoutePoint";
 import { RouteLeg } from "../value-objects/RouteLeg";
@@ -24,6 +24,7 @@ export class Route extends Path<RoutePoint> {
   legs: RouteLeg[];
   stops: RouteStop[];
   instructions: RouteInstruction[];
+  readonly trafficSections: TrafficSection[];
   readonly source: RouteSource;
   readonly summary: Summary;
   readonly deviationPoint?: Coordinates;
@@ -40,6 +41,7 @@ export class Route extends Path<RoutePoint> {
     this.legMembership = this.buildLegMembership(this.legs);
     this.stops = this.stopsFromPath(this);
     this.instructions = this.instructionsFromSource(source);
+    this.trafficSections = this.trafficSectionsFromSource(source);
     this.source = source;
     this.summary = source.summary;
     this.deviationPoint = source.summary.deviationPoint
@@ -169,6 +171,26 @@ export class Route extends Path<RoutePoint> {
     });
 
     return stops;
+  }
+
+  private trafficSectionsFromSource(source: RouteSource): TrafficSection[] {
+    try {
+      return (source.sections ?? [])
+        .filter((section) => section.sectionType === "TRAFFIC")
+        .map((section) => ({
+          sectionType: section.sectionType,
+          simpleCategory: section.simpleCategory,
+          startPointIndex: section.startPointIndex,
+          endPointIndex: section.endPointIndex,
+          delayInSeconds: section.delayInSeconds,
+          effectiveSpeedInKmh: section.effectiveSpeedInKmh,
+          magnitudeOfDelay: section.magnitudeOfDelay,
+          eventId: section.tec?.effectCode?.toString(),
+        }));
+    } catch (e) {
+      console.warn("Failed to parse traffic sections:", e);
+      return [];
+    }
   }
 
   private instructionsFromSource(source: RouteSource): RouteInstruction[] {

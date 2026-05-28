@@ -69,6 +69,11 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
   const handleInstructionToggle = (id: string, value: boolean) =>
     setInstructionToggles((prev) => ({ ...prev, [id]: value }));
 
+  const [trafficToggles, setTrafficToggles] = React.useState<Record<string, boolean>>({});
+  const getTrafficToggle = (id: string) => trafficToggles[id] ?? true;
+  const handleTrafficToggle = (id: string, value: boolean) =>
+    setTrafficToggles((prev) => ({ ...prev, [id]: value }));
+
   React.useEffect(() => {
     const handleRightClick = (e: L.LeafletMouseEvent) => {
       const latlng = map.mouseEventToLatLng(e.originalEvent);
@@ -117,6 +122,8 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         onReplanToggle={handleReplanToggle}
         instructionToggles={instructionToggles}
         onInstructionToggle={handleInstructionToggle}
+        trafficToggles={trafficToggles}
+        onTrafficToggle={handleTrafficToggle}
       />
       <GotoDialog
         onCoordinatesChange={(coordinates: Coordinates) => {
@@ -129,6 +136,7 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
           key={l.id}
           layer={l}
           showInstructions={getInstructionToggle(l.id)}
+          showTrafficSections={getTrafficToggle(l.id)}
         />
       ))}
       <GeoPathLayers layers={geoPathLayers} />

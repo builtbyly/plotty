@@ -160,69 +160,73 @@ describe("Route", () => {
   });
 
   it("names a route with deviationTime as 'Route N [alt +Xs]'", () => {
-    const source = makeSource({
-      summary: { ...summary, deviationTime: 128 },
-    });
+    const source = makeSource({ summary: { ...summary, deviationTime: 128 } });
     const route = new Route(source);
     expect(route.getName()).toBe("Route 1 [alt +128s]");
   });
 
   it("rounds deviationTime in the route name", () => {
-    const source = makeSource({
-      summary: { ...summary, deviationTime: 79.6 },
-    });
+    const source = makeSource({ summary: { ...summary, deviationTime: 79.6 } });
     const route = new Route(source);
     expect(route.getName()).toBe("Route 1 [alt +80s]");
   });
 
   it("extracts deviationPoint from summary when present", () => {
     const source = makeSource({
-      summary: {
-        ...summary,
-        deviationTime: 79,
-        deviationDistance: 132,
-        deviationPoint: { latitude: 48.131, longitude: 11.589 },
-      },
+      summary: { ...summary, deviationTime: 79, deviationDistance: 132, deviationPoint: { latitude: 48.131, longitude: 11.589 } },
     });
     const route = new Route(source);
-    expect(route.deviationPoint).toBeDefined();
     expect(route.deviationPoint?.latitude).toBe(48.131);
     expect(route.deviationPoint?.longitude).toBe(11.589);
   });
 
   it("has no deviationPoint when summary.deviationPoint is absent", () => {
-    const route = new Route(makeSource());
-    expect(route.deviationPoint).toBeUndefined();
+    expect(new Route(makeSource()).deviationPoint).toBeUndefined();
   });
 
   it("builds legMembership correctly for a 2-leg route", () => {
     const source: RouteSource = {
       legs: [
-        {
-          points: [
-            { latitude: 10, longitude: 10 },
-            { latitude: 20, longitude: 20 },
-            { latitude: 30, longitude: 30 },
-          ],
-          summary,
-        },
-        {
-          points: [
-            { latitude: 30, longitude: 30 },
-            { latitude: 40, longitude: 40 },
-            { latitude: 50, longitude: 50 },
-          ],
-          summary,
-        },
+        { points: [{ latitude: 10, longitude: 10 }, { latitude: 20, longitude: 20 }, { latitude: 30, longitude: 30 }], summary },
+        { points: [{ latitude: 30, longitude: 30 }, { latitude: 40, longitude: 40 }, { latitude: 50, longitude: 50 }], summary },
       ],
       summary,
       guidance: { instructions: [] },
       progress: [],
       sections: [],
     };
-
     const route = new Route(source);
-    // leg 0: indices 0,1,2 (3 points), leg 1: indices 3,4 (2 points, first shared one dropped)
     expect(route.legMembership).toEqual([0, 0, 0, 1, 1]);
+  });
+
+  describe("trafficSections", () => {
+    const twoPointSource = (sections: RouteSource["sections"]): RouteSource => ({
+      legs: [{ points: [{ latitude: 10, longitude: 10 }, { latitude: 20, longitude: 20 }, { latitude: 30, longitude: 30 }], summary }],
+      summary,
+      guidance: { instructions: [] },
+      progress: [],
+      sections,
+    });
+
+    it("parses TRAFFIC sections correctly", () => {
+      const source = twoPointSource([{ sectionType: "TRAFFIC", simpleCategory: "JAM", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 120, effectiveSpeedInKmh: 15, magnitudeOfDelay: 3, tec: { effectCode: 5, causes: [{ mainCauseCode: 1 }] } }]);
+      const route = new Route(source);
+      expect(route.trafficSections).toHaveLength(1);
+      expect(route.trafficSections[0]).toMatchObject({ sectionType: "TRAFFIC", simpleCategory: "JAM", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 120, effectiveSpeedInKmh: 15, magnitudeOfDelay: 3, eventId: "5" });
+    });
+
+    it("filters out non-TRAFFIC sections", () => {
+      const source = twoPointSource([
+        { sectionType: "TRAVEL_MODE", simpleCategory: "CAR", startPointIndex: 0, endPointIndex: 2, delayInSeconds: 0, effectiveSpeedInKmh: 80, magnitudeOfDelay: 0, tec: { effectCode: 0, causes: [] } },
+        { sectionType: "TRAFFIC", simpleCategory: "ROAD_WORK", startPointIndex: 1, endPointIndex: 2, delayInSeconds: 60, effectiveSpeedInKmh: 20, magnitudeOfDelay: 2, tec: { effectCode: 0, causes: [] } },
+      ]);
+      const route = new Route(source);
+      expect(route.trafficSections).toHaveLength(1);
+      expect(route.trafficSections[0].simpleCategory).toBe("ROAD_WORK");
+    });
+
+    it("returns empty array when sections is empty", () => {
+      expect(new Route(twoPointSource([])).trafficSections).toEqual([]);
+    });
   });
 });
