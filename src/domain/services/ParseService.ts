@@ -32,7 +32,7 @@ export class ParseService {
     }
 
     throw new Error(
-      `Failed to parse input from all parsers: ${errors.join("; ")}`
+      `Failed to parse input from all parsers: ${errors.join("; ")}`,
     );
   }
 }
