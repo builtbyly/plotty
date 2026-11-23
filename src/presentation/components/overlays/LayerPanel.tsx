@@ -17,6 +17,10 @@ import { useGistShare } from "../../hooks/useGistShare";
 import PasswordInput from "../../providers/PasswordInput";
 import { TileProviderSelector } from "./TileProviderSelector";
 import { TileProvider } from "../../providers/TileProvider";
+import {
+  LayerFeature,
+  LayerFeatureVisibility,
+} from "../../layers/LayerFeatureVisibility";
 
 interface LayerPanelProps<T extends AnyPath> {
   style?: React.CSSProperties;
@@ -29,12 +33,12 @@ interface LayerPanelProps<T extends AnyPath> {
   onColorChange: (layer: Layer<T>, hex: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onTileProviderChanged: (tileProvider: TileProvider) => void;
-  replanToggles?: Record<string, { behavioral: boolean; interval: boolean }>;
-  onReplanToggle?: (layerId: string, category: "behavioral" | "interval", value: boolean) => void;
-  instructionToggles?: Record<string, boolean>;
-  onInstructionToggle?: (layerId: string, value: boolean) => void;
-  trafficToggles?: Record<string, boolean>;
-  onTrafficToggle?: (layerId: string, value: boolean) => void;
+  getFeatureVisibility: (layerId: string) => LayerFeatureVisibility;
+  onFeatureVisibilityChange: (
+    layerId: string,
+    feature: LayerFeature,
+    visible: boolean,
+  ) => void;
 }
 
 export const LayerPanel = <T extends AnyPath>({
@@ -48,12 +52,8 @@ export const LayerPanel = <T extends AnyPath>({
   onColorChange,
   onReorder,
   onTileProviderChanged,
-  replanToggles = {},
-  onReplanToggle,
-  instructionToggles = {},
-  onInstructionToggle,
-  trafficToggles = {},
-  onTrafficToggle,
+  getFeatureVisibility,
+  onFeatureVisibilityChange,
 }: LayerPanelProps<T>) => {
   const [isScrollable, setIsScrollable] = React.useState(false);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -212,7 +212,7 @@ export const LayerPanel = <T extends AnyPath>({
                     })()}
                   </div>
                 )}
-                {layer.path instanceof LogcatPath && layer.path.replanEvents.length > 0 && onReplanToggle && (
+                {layer.path instanceof LogcatPath && layer.path.replanEvents.length > 0 && (
                   <div style={styles.replanToggles}>
                     <span style={styles.replanKicker}>Replans</span>
                     {(["behavioral", "interval"] as const).map((cat) => {
@@ -227,8 +227,12 @@ export const LayerPanel = <T extends AnyPath>({
                             <Checkbox
                               size="small"
                               sx={replanCheckboxSx}
-                              checked={(replanToggles[layer.id] ?? { behavioral: true, interval: true })[cat]}
-                              onChange={(e) => onReplanToggle!(layer.id, cat, e.target.checked)}
+                              checked={getFeatureVisibility(layer.id)[cat === "behavioral" ? "behavioralReplans" : "intervalReplans"]}
+                              onChange={(e) => onFeatureVisibilityChange(
+                                layer.id,
+                                cat === "behavioral" ? "behavioralReplans" : "intervalReplans",
+                                e.target.checked,
+                              )}
                             />
                           }
                         />
@@ -236,7 +240,7 @@ export const LayerPanel = <T extends AnyPath>({
                     })}
                   </div>
                 )}
-                {layer.path instanceof Route && layer.path.instructions.length > 0 && onInstructionToggle && (
+                {layer.path instanceof Route && layer.path.instructions.length > 0 && (
                   <div style={styles.replanToggles}>
                     <span style={styles.replanKicker}>Instructions</span>
                     <FormControlLabel
@@ -246,14 +250,14 @@ export const LayerPanel = <T extends AnyPath>({
                         <Checkbox
                           size="small"
                           sx={replanCheckboxSx}
-                          checked={instructionToggles[layer.id] ?? true}
-                          onChange={(e) => onInstructionToggle!(layer.id, e.target.checked)}
+                          checked={getFeatureVisibility(layer.id).instructions}
+                          onChange={(e) => onFeatureVisibilityChange(layer.id, "instructions", e.target.checked)}
                         />
                       }
                     />
                   </div>
                 )}
-                {layer.path instanceof Route && layer.path.trafficSections.length > 0 && onTrafficToggle && (
+                {layer.path instanceof Route && layer.path.trafficSections.length > 0 && (
                   <div style={styles.replanToggles}>
                     <span style={styles.replanKicker}>Traffic</span>
                     <FormControlLabel
@@ -263,8 +267,8 @@ export const LayerPanel = <T extends AnyPath>({
                         <Checkbox
                           size="small"
                           sx={replanCheckboxSx}
-                          checked={trafficToggles[layer.id] ?? true}
-                          onChange={(e) => onTrafficToggle!(layer.id, e.target.checked)}
+                          checked={getFeatureVisibility(layer.id).traffic}
+                          onChange={(e) => onFeatureVisibilityChange(layer.id, "traffic", e.target.checked)}
                         />
                       }
                     />
