@@ -59,21 +59,6 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
   const ttpPathLayers = filterLayers(store.layers, TtpPath);
   const logPathLayers = filterLayers(store.layers, LogcatPath);
 
-  const [replanToggles, setReplanToggles] = React.useState<Record<string, { behavioral: boolean; interval: boolean }>>({});
-  const getReplanToggle = (id: string) => replanToggles[id] ?? { behavioral: true, interval: true };
-  const handleReplanToggle = (id: string, category: "behavioral" | "interval", value: boolean) =>
-    setReplanToggles((prev) => ({ ...prev, [id]: { ...getReplanToggle(id), [category]: value } }));
-
-  const [instructionToggles, setInstructionToggles] = React.useState<Record<string, boolean>>({});
-  const getInstructionToggle = (id: string) => instructionToggles[id] ?? true;
-  const handleInstructionToggle = (id: string, value: boolean) =>
-    setInstructionToggles((prev) => ({ ...prev, [id]: value }));
-
-  const [trafficToggles, setTrafficToggles] = React.useState<Record<string, boolean>>({});
-  const getTrafficToggle = (id: string) => trafficToggles[id] ?? true;
-  const handleTrafficToggle = (id: string, value: boolean) =>
-    setTrafficToggles((prev) => ({ ...prev, [id]: value }));
-
   React.useEffect(() => {
     const handleRightClick = (e: L.LeafletMouseEvent) => {
       const latlng = map.mouseEventToLatLng(e.originalEvent);
@@ -118,12 +103,8 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         onColorChange={(layer, hex) => store.recolor(layer.id, hex)}
         onReorder={store.reorder}
         onTileProviderChanged={onTileProviderChanged}
-        replanToggles={replanToggles}
-        onReplanToggle={handleReplanToggle}
-        instructionToggles={instructionToggles}
-        onInstructionToggle={handleInstructionToggle}
-        trafficToggles={trafficToggles}
-        onTrafficToggle={handleTrafficToggle}
+        getFeatureVisibility={store.getFeatureVisibility}
+        onFeatureVisibilityChange={store.setFeatureVisibility}
       />
       <GotoDialog
         onCoordinatesChange={(coordinates: Coordinates) => {
@@ -135,20 +116,20 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         <RouteLayer
           key={l.id}
           layer={l}
-          showInstructions={getInstructionToggle(l.id)}
-          showTrafficSections={getTrafficToggle(l.id)}
+          showInstructions={store.getFeatureVisibility(l.id).instructions}
+          showTrafficSections={store.getFeatureVisibility(l.id).traffic}
         />
       ))}
       <GeoPathLayers layers={geoPathLayers} />
       <TtpPathLayers layers={ttpPathLayers} />
       {logPathLayers.filter((l) => l.visible).map((l) => {
-        const t = getReplanToggle(l.id);
+        const featureVisibility = store.getFeatureVisibility(l.id);
         return (
           <LogcatPathLayer
             key={l.id}
             layer={l}
-            showBehavioral={t.behavioral}
-            showInterval={t.interval}
+            showBehavioral={featureVisibility.behavioralReplans}
+            showInterval={featureVisibility.intervalReplans}
           />
         );
       })}

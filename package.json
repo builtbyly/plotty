@@ -2,6 +2,10 @@
   "name": "plotty",
   "private": true,
   "version": "1.0.0",
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=22"
+  },
   "type": "module",
   "homepage": "https://lainovic.github.io/plotty",
   "scripts": {

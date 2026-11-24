@@ -259,7 +259,7 @@ function trafficSectionColor(simpleCategory: string): string {
   return "#FF6600";
 }
 
-const RouteTrafficSections: React.FC<RouteComponentProps> = ({ route, color: _color }) => {
+const RouteTrafficSections: React.FC<RouteComponentProps> = ({ route }) => {
   const sections = route.trafficSections;
   const points = route.points;
 
