@@ -1,15 +1,11 @@
-export type LayerFeature =
-  | "instructions"
-  | "traffic"
-  | "behavioralReplans"
-  | "intervalReplans";
-
 export interface LayerFeatureVisibility {
   instructions: boolean;
   traffic: boolean;
   behavioralReplans: boolean;
   intervalReplans: boolean;
 }
+
+export type LayerFeature = keyof LayerFeatureVisibility;
 
 export type LayerFeatureVisibilityById = Record<
   string,
