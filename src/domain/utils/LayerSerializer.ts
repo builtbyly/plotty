@@ -1,4 +1,4 @@
-import { Layer, createLayer } from "../entities/Layer";
+import { Layer, LayerFeatureVisibility, createLayer } from "../entities/Layer";
 import { GeoPath, GeoRenderHint } from "../entities/GeoPath";
 import { LogcatPath } from "../entities/LogcatPath";
 import { TtpPath } from "../entities/TtpPath";
@@ -85,6 +85,7 @@ type SerializedLayer = {
   name: string;
   color: string;
   visible: boolean;
+  featureVisibility?: Partial<LayerFeatureVisibility>;
   path: SerializedPath;
 };
 
@@ -227,6 +228,7 @@ export function serializeLayers(layers: Layer<AnyPath>[]): string {
     name: layer.name,
     color: layer.color.toHex(),
     visible: layer.visible,
+    featureVisibility: layer.featureVisibility,
     path: serializePath(layer.path),
   }));
   return JSON.stringify(serialized);
@@ -244,6 +246,12 @@ export function deserializeLayers(json: string): Layer<AnyPath>[] {
     if (!layer.path || typeof layer.path.type !== "string") throw new Error(`Layer ${i}: missing path.type`);
     const path = deserializePath(layer.path);
     const created = createLayer(layer.name, Color.fromHex(layer.color), path);
+    for (const feature of Object.keys(created.featureVisibility) as (keyof LayerFeatureVisibility)[]) {
+      const visible = layer.featureVisibility?.[feature];
+      if (typeof visible === "boolean") {
+        created.featureVisibility[feature] = visible;
+      }
+    }
     return { ...created, id: layer.id, visible: layer.visible === true };
   });
 }

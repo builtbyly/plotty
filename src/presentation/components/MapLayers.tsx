@@ -103,7 +103,6 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         onColorChange={(layer, hex) => store.recolor(layer.id, hex)}
         onReorder={store.reorder}
         onTileProviderChanged={onTileProviderChanged}
-        getFeatureVisibility={store.getFeatureVisibility}
         onFeatureVisibilityChange={store.setFeatureVisibility}
       />
       <GotoDialog
@@ -116,14 +115,14 @@ export const MapLayers = ({ onTileProviderChanged }: MapLayersProps) => {
         <RouteLayer
           key={l.id}
           layer={l}
-          showInstructions={store.getFeatureVisibility(l.id).instructions}
-          showTrafficSections={store.getFeatureVisibility(l.id).traffic}
+          showInstructions={l.featureVisibility.instructions}
+          showTrafficSections={l.featureVisibility.trafficSections}
         />
       ))}
       <GeoPathLayers layers={geoPathLayers} />
       <TtpPathLayers layers={ttpPathLayers} />
       {logPathLayers.filter((l) => l.visible).map((l) => {
-        const featureVisibility = store.getFeatureVisibility(l.id);
+        const { featureVisibility } = l;
         return (
           <LogcatPathLayer
             key={l.id}

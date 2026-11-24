@@ -1,16 +1,8 @@
 import React from "react";
-import { Layer } from "../../domain/entities/Layer";
+import { Layer, LayerFeature } from "../../domain/entities/Layer";
 import { AnyPath } from "../../domain/entities/Path";
 import { Color } from "../../domain/value-objects/Color";
 import { usePersistedLayers } from "./usePersistedLayers";
-import {
-  getLayerFeatureVisibility,
-  LayerFeature,
-  LayerFeatureVisibility,
-  LayerFeatureVisibilityById,
-  removeLayerFeatureVisibility,
-  setLayerFeatureVisibility,
-} from "../layers/LayerFeatureVisibility";
 
 export interface LayerStore {
   layers: Layer<AnyPath>[];
@@ -21,14 +13,11 @@ export interface LayerStore {
   recolor(id: string, hex: string): void;
   reorder(fromIndex: number, toIndex: number): void;
   clearAll(): void;
-  getFeatureVisibility(id: string): LayerFeatureVisibility;
   setFeatureVisibility(id: string, feature: LayerFeature, visible: boolean): void;
 }
 
 export function useLayerStore(): LayerStore {
   const [layers, setLayers] = usePersistedLayers();
-  const [featureVisibilityById, setFeatureVisibilityById] =
-    React.useState<LayerFeatureVisibilityById>({});
 
   const addLayers = React.useCallback((newLayers: Layer<AnyPath>[]) => {
     setLayers((prev) => [...prev, ...newLayers]);
@@ -48,7 +37,6 @@ export function useLayerStore(): LayerStore {
 
   const remove = React.useCallback((id: string) => {
     setLayers((prev) => prev.filter((l) => l.id !== id));
-    setFeatureVisibilityById((prev) => removeLayerFeatureVisibility(prev, id));
   }, [setLayers]);
 
   const recolor = React.useCallback((id: string, hex: string) => {
@@ -68,21 +56,19 @@ export function useLayerStore(): LayerStore {
 
   const clearAll = React.useCallback(() => {
     setLayers([]);
-    setFeatureVisibilityById({});
   }, [setLayers]);
-
-  const getFeatureVisibility = React.useCallback(
-    (id: string) => getLayerFeatureVisibility(featureVisibilityById, id),
-    [featureVisibilityById],
-  );
 
   const setFeatureVisibility = React.useCallback(
     (id: string, feature: LayerFeature, visible: boolean) => {
-      setFeatureVisibilityById((prev) =>
-        setLayerFeatureVisibility(prev, id, feature, visible),
+      setLayers((prev) =>
+        prev.map((layer) =>
+          layer.id === id
+            ? { ...layer, featureVisibility: { ...layer.featureVisibility, [feature]: visible } }
+            : layer
+        )
       );
     },
-    [],
+    [setLayers],
   );
 
   return {
@@ -94,7 +80,6 @@ export function useLayerStore(): LayerStore {
     recolor,
     reorder,
     clearAll,
-    getFeatureVisibility,
     setFeatureVisibility,
   };
 }
