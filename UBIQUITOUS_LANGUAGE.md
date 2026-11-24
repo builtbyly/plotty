@@ -73,7 +73,7 @@
 >
 > **Developer:** "And sharing saves the same state?"
 >
-> **Domain expert:** "A **Shared Session** currently saves the ordered **Layers**, but not every **Feature Visibility** setting."
+> **Domain expert:** "Yes. A **Shared Session** saves the ordered **Layers** and their **Feature Visibility** settings, just like a **Local Session**."
 
 ## Flagged ambiguities
 
@@ -81,6 +81,6 @@
 - **Path** and **Layer** are sometimes treated as synonyms. A **Path** is the imported geographic data; a **Layer** is how one path participates in the map display.
 - **Layer Visibility** and **Feature Visibility** are both represented by checkboxes but have different meanings. Keep those terms distinct.
 - **Map** and **Basemap** are sometimes conflated. The **Map** is the complete interactive view; the **Basemap** is only its background tiles.
-- **Session** currently serializes **Layers**, but excludes route instruction, traffic, and replan **Feature Visibility**. Avoid claiming that a session captures the entire visible state until that behavior changes.
+- A **Session** saves **Layers** and their **Feature Visibility**. Older sessions without these settings show all optional features by default.
 - **Workspace** and **Layer Stack** do not name established Plotty concepts. Do not introduce them; use **Map**, **Layers**, **Layer Panel**, or **Session** according to the intended meaning.
 - `MapLayers` is an implementation name, not a domain term. It currently coordinates importing, the **Layer Panel**, map interactions, and rendering in addition to displaying **Layers**.

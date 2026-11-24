@@ -1,7 +1,7 @@
 import React from "react";
 import { tomtomSecondaryColor } from "../../../shared/colors";
 import { AnyPath } from "../../../domain/entities/Path";
-import { Layer } from "../../../domain/entities/Layer";
+import type { Layer, LayerFeature } from "../../../domain/entities/Layer";
 import L from "leaflet";
 import "./LayerPanel.css";
 import LayerItem from "./LayerItem";
@@ -17,10 +17,6 @@ import { useGistShare } from "../../hooks/useGistShare";
 import PasswordInput from "../../providers/PasswordInput";
 import { TileProviderSelector } from "./TileProviderSelector";
 import { TileProvider } from "../../providers/TileProvider";
-import {
-  LayerFeature,
-  LayerFeatureVisibility,
-} from "../../layers/LayerFeatureVisibility";
 
 interface LayerPanelProps<T extends AnyPath> {
   style?: React.CSSProperties;
@@ -33,7 +29,6 @@ interface LayerPanelProps<T extends AnyPath> {
   onColorChange: (layer: Layer<T>, hex: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onTileProviderChanged: (tileProvider: TileProvider) => void;
-  getFeatureVisibility: (layerId: string) => LayerFeatureVisibility;
   onFeatureVisibilityChange: (
     layerId: string,
     feature: LayerFeature,
@@ -52,7 +47,6 @@ export const LayerPanel = <T extends AnyPath>({
   onColorChange,
   onReorder,
   onTileProviderChanged,
-  getFeatureVisibility,
   onFeatureVisibilityChange,
 }: LayerPanelProps<T>) => {
   const [isScrollable, setIsScrollable] = React.useState(false);
@@ -218,6 +212,7 @@ export const LayerPanel = <T extends AnyPath>({
                     {(["behavioral", "interval"] as const).map((cat) => {
                       const count = (layer.path as unknown as LogcatPath).replanEvents.filter((e) => e.category === cat).length;
                       if (count === 0) return null;
+                      const feature = cat === "behavioral" ? "behavioralReplans" : "intervalReplans";
                       return (
                         <FormControlLabel
                           key={cat}
@@ -227,10 +222,10 @@ export const LayerPanel = <T extends AnyPath>({
                             <Checkbox
                               size="small"
                               sx={replanCheckboxSx}
-                              checked={getFeatureVisibility(layer.id)[cat === "behavioral" ? "behavioralReplans" : "intervalReplans"]}
+                              checked={layer.featureVisibility[feature]}
                               onChange={(e) => onFeatureVisibilityChange(
                                 layer.id,
-                                cat === "behavioral" ? "behavioralReplans" : "intervalReplans",
+                                feature,
                                 e.target.checked,
                               )}
                             />
@@ -250,7 +245,7 @@ export const LayerPanel = <T extends AnyPath>({
                         <Checkbox
                           size="small"
                           sx={replanCheckboxSx}
-                          checked={getFeatureVisibility(layer.id).instructions}
+                          checked={layer.featureVisibility.instructions}
                           onChange={(e) => onFeatureVisibilityChange(layer.id, "instructions", e.target.checked)}
                         />
                       }
@@ -267,8 +262,8 @@ export const LayerPanel = <T extends AnyPath>({
                         <Checkbox
                           size="small"
                           sx={replanCheckboxSx}
-                          checked={getFeatureVisibility(layer.id).traffic}
-                          onChange={(e) => onFeatureVisibilityChange(layer.id, "traffic", e.target.checked)}
+                          checked={layer.featureVisibility.trafficSections}
+                          onChange={(e) => onFeatureVisibilityChange(layer.id, "trafficSections", e.target.checked)}
                         />
                       }
                     />
